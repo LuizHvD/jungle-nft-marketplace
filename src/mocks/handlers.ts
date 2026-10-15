@@ -13,11 +13,17 @@ function rememberSocket(connection: WebSocketHandlerConnection): void {
   })
 }
 
+// O MSW 2.15 apaga `/socket.io/` antes de comparar a URL, então um matcher
+// só desse caminho também captura o HMR e qualquer outro socket na mesma
+// origem. O link fica amplo de propósito: só a URL com `socket.io` entra no
+// binding. As demais são devolvidas ao servidor original.
 const socketHandlers = [
   ws.link('*').addEventListener('connection', (connection) => {
     if (!String(connection.client.url).includes('socket.io')) {
+      connection.server.connect()
       return
     }
+
     rememberSocket(connection)
   }),
 ]
