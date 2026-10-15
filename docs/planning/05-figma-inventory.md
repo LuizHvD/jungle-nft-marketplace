@@ -157,17 +157,33 @@ O CSS não recebeu valor substituto quando a leitura falhou.
 | Busca | Por que ficou de fora | O que o tema não tem |
 |---|---|---|
 | Família, peso e tamanho | estilos `Display`, `Heading`, `Title`, `Body Large`, `Body`, `Caption` e `Tiny` aparecem na lista, mas o clique não abriu métrica; Dev Mode bloqueado; `fig-kiwi` ilegível | nenhuma `font-family` além do `sans-serif` que já estava no spike |
-| `Color`, `Text`, `Logo` | mesmos estilos listados, sem hex no painel | cor de texto; o texto herda a cor do navegador |
+| `Color`, `Text`, `Logo` | mesmos estilos listados, sem hex no painel | a cor de texto do Figma segue desconhecida. O tema usa `#FFFFFF` só como fallback de legibilidade, marcado no CSS |
 | Sombra | os nós de chrome lidos não listaram efeito | nenhuma sombra |
-| Texto de `Nav Item` e cópia do rodapé | o painel de comentários cobriu Propriedades nesses nós e a árvore não voltou a entregar o texto | primeiro item do `Nav`; medalhões, newsletter, contato e colunas do `Footer` |
+| Texto de `Nav Item` e cópia do rodapé | o painel de comentários cobriu Propriedades nesses nós e a árvore não voltou a entregar o texto | o primeiro item do `Nav` continua ausente. O rodapé mostra a estrutura lida na descrição do componente, com rótulos provisórios |
 | Filtros do catálogo | `Sidebar` não chegou a abrir no painel nesta sessão | nenhum nome de filtro novo |
-| Ícones `Iconly` | sem SVG extraído | os controles reservam a caixa medida e o nome acessível, sem desenho inventado |
+| Ícones `Iconly` | sem SVG extraído | Home, Shop, User e Filter usam SVG provisório na caixa medida. O desenho não é o do arquivo |
 | `Badge Count` 6 | propriedade da instância do header, não um carrinho desta fase | o botão `Cart` não mostra contagem |
 | Centro da `Tab Bar` | `Group` e `Ellipse 39` sem rótulo nem medida além do nome | nenhum botão central |
 | Raio 40 do frame mobile | continua medida do frame, não do `body` | `body` sem raio |
 
-Nenhum hex fora desta página entrou no tema. O contorno de `:focus-visible` é o `outline: auto` do navegador, não um token do Figma.
+O único hex que não saiu do painel é `#FFFFFF`, fallback de texto sobre `Color/Ink` enquanto `Color/Text` não tiver medida. O botão `primary` usa `Color/Ink` no ícone, porque branco sobre `#D28A4C` não segura o contraste. O contorno de `:focus-visible` é o `outline: auto` do navegador, não um token do Figma.
+
+### Fallback provisório
+
+Não substitui medida. Sai quando o painel entregar o valor.
+
+| Peça | O que está na tela | Origem |
+|---|---|---|
+| Texto | `#FFFFFF` e `color-scheme: dark` | contraste sobre `#140D0A`; não é `Color/Text` |
+| Home, Shop, User, Filter | SVG `data-fallback="provisional"` na caixa de 20 px ou no botão de 45 px | nomes de camada; o vetor do Figma não foi exportado |
+| Medalhões | três discos `Color/Primary` de 45 px, rótulo `Medalhão` | a descrição do `Footer` cita três medalhões; arte e rótulo reais não apareceram |
+| Newsletter | rótulo `Newsletter`, campo de 313×45 px em `Color/Surface Card`, botão `Enviar` sem efeito | a descrição cita o signup; o envio não conclui operação |
+| Faixa da marca | `KURIO`, mais `Social` e `Carteira` | `KURIO Wordmark` é camada confirmada; os chips repetem as palavras da descrição |
+| Quatro colunas | `Link 1` a `Link 4`, sem navegação | a descrição cita quatro colunas; os rótulos não foram lidos |
+| Espaço interno do rodapé | 24 px | padding vertical do frame desktop, reutilizado porque o `Footer` não listou espaço próprio |
+
+A tab bar continua no fluxo, com `min-height: 100dvh` no shell. Em página curta ela encosta na base da viewport. Em página longa ela vem depois do conteúdo e não cobre o `main`.
 
 ## Uso no planejamento
 
-Os outros documentos de `docs/planning/` apontam para estas tabelas. A largura 1440, o frame 414×896 e o raio de 40 px são medidas do frame no Figma. Não definem a viewport da aplicação e não pedem borda arredondada no `body`. A Fase 2 aplicou só o que esta página confirma. O que a tabela de limitações deixa em aberto continua fora do CSS.
+Os outros documentos de `docs/planning/` apontam para estas tabelas. A largura 1440, o frame 414×896 e o raio de 40 px são medidas do frame no Figma. Não definem a viewport da aplicação e não pedem borda arredondada no `body`. A Fase 2 aplicou o que esta página confirma. O fallback provisório está marcado à parte e não entra como medida do Figma.

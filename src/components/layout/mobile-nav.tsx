@@ -1,9 +1,10 @@
 import { Button } from '@/components/ui/button.tsx'
+import { ProvisionalIcon } from '@/components/layout/provisional-icon.tsx'
 
 const tabItems = [
-  { label: 'Home', left: '36px' },
-  { label: 'Shop', left: '292px' },
-  { label: 'User', left: '354px' },
+  { label: 'Home', icon: 'home', left: '36px' },
+  { label: 'Shop', icon: 'shop', left: '292px' },
+  { label: 'User', icon: 'user', left: '354px' },
 ] as const
 
 export function MobileNav() {
@@ -18,7 +19,9 @@ export function MobileNav() {
           aria-label={item.label}
           className="absolute top-[71px] size-[20px]"
           style={{ left: item.left }}
-        />
+        >
+          <ProvisionalIcon name={item.icon} className="size-full" />
+        </Button>
       ))}
     </nav>
   )

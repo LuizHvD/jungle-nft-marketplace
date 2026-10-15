@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button.tsx'
+import { ProvisionalIcon } from '@/components/layout/provisional-icon.tsx'
 
 export function MobileSearch() {
   return (
@@ -11,7 +12,9 @@ export function MobileSearch() {
         variant="primary"
         aria-label="Iconly/Curved/Filter"
         className="size-[45px] shrink-0 rounded-[14px] p-[12px]"
-      />
+      >
+        <ProvisionalIcon name="filter" className="size-full" />
+      </Button>
     </div>
   )
 }

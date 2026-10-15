@@ -4,11 +4,15 @@
   --color-ink: #140d0a;
   --color-primary: #d28a4c;
   --color-surface-card: #241612;
+  /* Fallback de legibilidade. Não é token medido no Figma. */
+  --color-text-fallback: #ffffff;
 }
 
 body {
   margin: 0;
   background-color: var(--color-ink);
+  color: var(--color-text-fallback);
+  color-scheme: dark;
   font-family: sans-serif;
 }
 
