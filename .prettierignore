@@ -1,0 +1,11 @@
+dist
+node_modules
+coverage
+playwright-report
+test-results
+public/mockServiceWorker.js
+.chrome-debug-profile
+assets-src
+.agents
+docs
+pnpm-lock.yaml
