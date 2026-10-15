@@ -1,0 +1,52 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+coverage
+playwright-report
+test-results
+*.local
+
+# Ambiente real e segredos. .env.example fica versionável.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+credentials.json
+service-account*.json
+
+# Ferramentas locais do agente, fora do desafio
+.agents/
+skills-lock.json
+
+# Probes e diagnósticos da inspeção do Figma. As referências úteis ficam em frames/
+docs/planning/figma-captures/*.png
+docs/planning/figma-captures/probe-*
+docs/planning/figma-captures/zoom-menu.png
+docs/planning/figma-captures/inspection-result.json
+
+# Perfil de navegador da inspeção e artefatos temporários
+.chrome-debug-profile/
+tmp/
+*.tmp
+*.tsbuildinfo
+
+# Editor
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
