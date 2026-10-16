@@ -1,13 +1,18 @@
+import { useNavigate } from '@tanstack/react-router'
+
 import { Button } from '@/components/ui/button.tsx'
 import { ProvisionalIcon } from '@/components/layout/provisional-icon.tsx'
+import { useSession } from '@/lib/session/session.ts'
 
 const tabItems = [
   { label: 'Home', icon: 'home', left: '36px' },
   { label: 'Shop', icon: 'shop', left: '292px' },
-  { label: 'User', icon: 'user', left: '354px' },
 ] as const
 
 export function MobileNav() {
+  const navigate = useNavigate()
+  const session = useSession()
+
   return (
     <nav
       aria-label="Tab Bar"
@@ -23,6 +28,21 @@ export function MobileNav() {
           <ProvisionalIcon name={item.icon} className="size-full" />
         </Button>
       ))}
+      <Button
+        id="tab-user"
+        aria-label="User"
+        className="absolute top-[71px] size-[20px]"
+        style={{ left: '354px' }}
+        onClick={() => {
+          if (session.data) {
+            void navigate({ to: '/perfil' })
+            return
+          }
+          void navigate({ to: '/login', search: { returnTo: '/perfil' } })
+        }}
+      >
+        <ProvisionalIcon name="user" className="size-full" />
+      </Button>
     </nav>
   )
 }
