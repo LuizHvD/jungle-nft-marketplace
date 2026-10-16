@@ -12,6 +12,7 @@ import {
   login,
   readSession,
   resetDemo,
+  submitLogin,
 } from './auth-helpers'
 
 async function logout(page: Page) {
@@ -191,12 +192,19 @@ test('logout fecha o socket e o 401 atrasado não derruba a conta nova', async (
   await page.addInitScript(() => {
     const originalOpen = XMLHttpRequest.prototype.open
     const originalSend = XMLHttpRequest.prototype.send
+    const originalAbort = XMLHttpRequest.prototype.abort
     const held: XMLHttpRequest[] = []
     XMLHttpRequest.prototype.open = function (method: string, url: string | URL) {
       const target = this as XMLHttpRequest & { __method?: string; __url?: string }
       target.__method = String(method)
       target.__url = String(url)
       return originalOpen.call(this, method, url, true)
+    }
+    XMLHttpRequest.prototype.abort = function () {
+      if (held.includes(this)) {
+        return
+      }
+      originalAbort.call(this)
     }
     XMLHttpRequest.prototype.send = function (body?: Document | XMLHttpRequestBodyInit | null) {
       const target = this as XMLHttpRequest & { __method?: string; __url?: string }
@@ -212,11 +220,7 @@ test('logout fecha o socket e o 401 atrasado não derruba a conta nova', async (
       if (!xhr) {
         return 0
       }
-      try {
-        originalSend.call(xhr, null)
-      } catch {
-        return -1
-      }
+      originalSend.call(xhr, null)
       return 1
     }
   })
@@ -229,21 +233,63 @@ test('logout fecha o socket e o 401 atrasado não derruba a conta nova', async (
   await page.evaluate(() => {
     sessionStorage.setItem('hold-profile', '1')
   })
-  await page.goto('/perfil')
+  await page.getByRole('link', { name: 'Ada Demo' }).click()
   await expect(page.getByTestId('profile-skeleton')).toBeVisible()
   await page.getByRole('button', { name: 'Sair' }).click()
   await expect.poll(() => readSession(page)).toBeNull()
   await expect.poll(() =>
     page.evaluate(() => document.documentElement.dataset.sessionSocket),
   ).toBe('closed')
-  await login(page, biaEmail, biaPassword)
-  await page.evaluate(() => {
+  await page.getByRole('link', { name: 'Login' }).click()
+  await submitLogin(page, biaEmail, biaPassword)
+  await expect(page.getByRole('link', { name: 'Bia Demo' })).toBeVisible()
+  const lateProfile = page.waitForResponse(
+    (response) =>
+      response.url().includes('/api/profile') && response.request().method() === 'GET',
+  )
+  const released = await page.evaluate(() => {
     sessionStorage.removeItem('hold-profile')
-    const release = (window as Window & { __releaseProfileGet?: () => number }).__releaseProfileGet
-    release?.()
+    const release = (window as Window & { __releaseProfileGet?: () => number })
+      .__releaseProfileGet
+    if (!release) {
+      return 0
+    }
+    return release()
   })
+  expect(released).toBe(1)
+  expect((await lateProfile).status()).toBe(401)
   await expect(page.getByRole('link', { name: 'Bia Demo' })).toBeVisible()
   const stored = await readSession(page)
   expect(stored).toContain(biaEmail)
   expect(stored).not.toContain(adaEmail)
+})
+
+test('falha ao validar a sessão bloqueia a rota privada e mantém o token', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await resetDemo(page)
+  await login(page, adaEmail, adaPassword)
+  await page.evaluate(async () => {
+    await fetch('/api/demo/failures', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ status: 500 }),
+    })
+  })
+  await page.goto('/perfil')
+  await expect(page.getByRole('alert')).toHaveText('Não foi possível validar a sessão.')
+  await expect(page.getByLabel('Senha atual')).toHaveCount(0)
+  await expect(page).not.toHaveURL(/\/login/)
+  expect(await readSession(page)).toContain(adaEmail)
+  await page.evaluate(async () => {
+    await fetch('/api/demo/failures', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({}),
+    })
+  })
+  await page.getByRole('button', { name: 'Tentar de novo' }).click()
+  await expect(page.getByLabel('Senha atual')).toBeVisible()
+  expect(await readSession(page)).toContain(adaEmail)
 })

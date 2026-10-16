@@ -1,6 +1,7 @@
 import { QueryClient } from '@tanstack/react-query'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { commitOwnedProfile, commitOwnedWallet } from './owned-cache.ts'
 import { closeAuthTarget, safeReturnTo } from './return-to.ts'
 import { retrySessionQuery } from './retry-session.ts'
 import { logout } from './logout.ts'
@@ -218,5 +219,60 @@ describe('sessão', () => {
     expect(retrySessionQuery(1, transient)).toBe(false)
     expect(retrySessionQuery(0, denied)).toBe(false)
     expect(retrySessionQuery(0, new Error('rede'))).toBe(true)
+  })
+})
+
+describe('mutation atrasada', () => {
+  beforeEach(() => {
+    setSessionStore(memoryStore())
+  })
+
+  afterEach(() => {
+    setSessionStore(null)
+  })
+
+  it('não grava perfil nem sessão da Ada depois do login da Bia', () => {
+    writeStoredSession(bia)
+    const client = testClient()
+    client.setQueryData(['session'], bia)
+    client.setQueryData(['profile', 'user-bia'], {
+      id: 'user-bia',
+      email: bia.user.email,
+      name: bia.user.name,
+      avatarId: null,
+    })
+    const applied = commitOwnedProfile(
+      client,
+      { userId: ada.user.id, token: ada.token },
+      {
+        id: ada.user.id,
+        email: ada.user.email,
+        name: 'Ada atrasada',
+        avatarId: 'primary',
+      },
+      { syncName: true },
+    )
+    expect(applied).toBe(false)
+    expect(client.getQueryData(['profile', 'user-ada'])).toBeUndefined()
+    expect(client.getQueryData(['session'])).toEqual(bia)
+    expect(readStoredSession()?.user.name).toBe('Bia Demo')
+  })
+
+  it('não recria a carteira da Ada depois do logout', () => {
+    clearStoredSession()
+    const client = testClient()
+    const applied = commitOwnedWallet(
+      client,
+      { userId: ada.user.id, token: ada.token },
+      {
+        id: 'wallet-ada',
+        label: 'Principal da Ada',
+        address: '0xada0000000000000000000000000000000000001',
+        role: 'primary',
+        connection: { network: 'demo-mainnet', status: 'connected' },
+      },
+    )
+    expect(applied).toBe(false)
+    expect(client.getQueryData(['wallets', 'user-ada'])).toBeUndefined()
   })
 })

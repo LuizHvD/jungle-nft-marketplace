@@ -9,8 +9,9 @@ import { apiErrorMessage } from '@/lib/http/error.ts'
 import { useSession } from '@/lib/session/session.ts'
 
 import { TextField } from '@/features/auth/text-field.tsx'
+import { commitOwnedWallet, readActorStamp } from '@/lib/session/owned-cache.ts'
 
-import { saveWallet, useWallets } from './use-wallets.ts'
+import { useWallets } from './use-wallets.ts'
 import { WalletRow } from './wallet-row.tsx'
 
 type CreateValues = {
@@ -19,7 +20,7 @@ type CreateValues = {
   role: 'primary' | 'secondary'
 }
 
-function CreateWalletForm({ userId }: { userId: string }) {
+function CreateWalletForm() {
   const client = useQueryClient()
   const form = useForm<CreateValues>({
     resolver: zodResolver(walletCreateSchema),
@@ -28,11 +29,14 @@ function CreateWalletForm({ userId }: { userId: string }) {
   const create = useMutation({
     retry: 0,
     mutationFn: async (values: CreateValues) => {
+      const stamp = readActorStamp()
       const response = await http.post('/wallets', values)
-      return walletSchema.parse(response.data)
+      return { wallet: walletSchema.parse(response.data), stamp }
     },
-    onSuccess: (wallet) => {
-      saveWallet(client, userId, wallet)
+    onSuccess: ({ wallet, stamp }) => {
+      if (!stamp || !commitOwnedWallet(client, stamp, wallet)) {
+        return
+      }
       form.reset({ label: '', address: '', role: 'secondary' })
     },
   })
@@ -114,11 +118,11 @@ export function WalletsPage() {
       <ul>
         {wallets.data.wallets.map((wallet) => (
           <li key={wallet.id}>
-            <WalletRow userId={userId} wallet={wallet} />
+            <WalletRow wallet={wallet} />
           </li>
         ))}
       </ul>
-      <CreateWalletForm userId={userId} />
+      <CreateWalletForm />
     </main>
   )
 }

@@ -1,7 +1,6 @@
-import { useMutation, useQueryClient, type QueryClient } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 
-import type { SessionResponse } from '@/contracts/auth.ts'
 import {
   passwordPatchSchema,
   profilePatchSchema,
@@ -12,24 +11,13 @@ import { Skeleton } from '@/components/ui/skeleton.tsx'
 import { focusFirstInvalid, zodResolver } from '@/lib/forms/zod-resolver.ts'
 import { http } from '@/lib/http/client.ts'
 import { apiErrorCode, apiErrorMessage } from '@/lib/http/error.ts'
-import { sessionQueryKey } from '@/lib/session/private-cache.ts'
+import { commitOwnedProfile, readActorStamp } from '@/lib/session/owned-cache.ts'
 import { useSession } from '@/lib/session/session.ts'
-import { writeStoredSession } from '@/lib/session/storage.ts'
 
 import { TextField } from '@/features/auth/text-field.tsx'
 
 import { avatarOptions } from './avatar-options.ts'
 import { useProfile } from './use-profile.ts'
-
-function syncSessionName(client: QueryClient, name: string) {
-  const current = client.getQueryData<SessionResponse>(sessionQueryKey)
-  if (!current) {
-    return
-  }
-  const next = { ...current, user: { ...current.user, name } }
-  writeStoredSession(next)
-  client.setQueryData(sessionQueryKey, next)
-}
 
 function NameForm({ profile }: { profile: Profile }) {
   const client = useQueryClient()
@@ -40,12 +28,15 @@ function NameForm({ profile }: { profile: Profile }) {
   const save = useMutation({
     retry: 0,
     mutationFn: async (values: { name: string }) => {
+      const stamp = readActorStamp()
       const response = await http.patch('/profile', values)
-      return profileSchema.parse(response.data)
+      return { profile: profileSchema.parse(response.data), stamp }
     },
-    onSuccess: (next) => {
-      client.setQueryData(['profile', next.id], next)
-      syncSessionName(client, next.name)
+    onSuccess: ({ profile: next, stamp }) => {
+      if (!stamp) {
+        return
+      }
+      commitOwnedProfile(client, stamp, next, { syncName: true })
     },
   })
   const error = form.formState.errors.name?.message
@@ -83,11 +74,15 @@ function AvatarForm({ profile }: { profile: Profile }) {
   const save = useMutation({
     retry: 0,
     mutationFn: async (avatarId: string) => {
+      const stamp = readActorStamp()
       const response = await http.patch('/profile/avatar', { avatarId })
-      return profileSchema.parse(response.data)
+      return { profile: profileSchema.parse(response.data), stamp }
     },
-    onSuccess: (next) => {
-      client.setQueryData(['profile', next.id], next)
+    onSuccess: ({ profile: next, stamp }) => {
+      if (!stamp) {
+        return
+      }
+      commitOwnedProfile(client, stamp, next)
     },
   })
 

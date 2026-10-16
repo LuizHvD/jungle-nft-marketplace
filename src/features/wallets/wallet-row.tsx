@@ -13,8 +13,7 @@ import { http } from '@/lib/http/client.ts'
 import { apiErrorMessage } from '@/lib/http/error.ts'
 
 import { TextField } from '@/features/auth/text-field.tsx'
-
-import { saveWallet } from './use-wallets.ts'
+import { commitOwnedWallet, readActorStamp } from '@/lib/session/owned-cache.ts'
 
 type WalletValues = {
   label: string
@@ -24,13 +23,7 @@ type WalletValues = {
 
 type Network = 'demo-mainnet' | 'demo-l2'
 
-export function WalletRow({
-  userId,
-  wallet,
-}: {
-  userId: string
-  wallet: Wallet
-}) {
+export function WalletRow({ wallet }: { wallet: Wallet }) {
   const client = useQueryClient()
   const form = useForm<WalletValues>({
     resolver: zodResolver(walletCreateSchema),
@@ -46,11 +39,14 @@ export function WalletRow({
   const save = useMutation({
     retry: 0,
     mutationFn: async (values: WalletValues) => {
+      const stamp = readActorStamp()
       const response = await http.patch(`/wallets/${wallet.id}`, values)
-      return walletSchema.parse(response.data)
+      return { wallet: walletSchema.parse(response.data), stamp }
     },
-    onSuccess: (next) => {
-      saveWallet(client, userId, next)
+    onSuccess: ({ wallet: next, stamp }) => {
+      if (!stamp || !commitOwnedWallet(client, stamp, next)) {
+        return
+      }
       form.reset({
         label: next.label,
         address: next.address,
@@ -61,12 +57,15 @@ export function WalletRow({
   const connect = useMutation({
     retry: 0,
     mutationFn: async (action: 'connect' | 'disconnect' | 'reject') => {
+      const stamp = readActorStamp()
       const body = walletConnectionSchema.parse({ network, action })
       const response = await http.post(`/wallets/${wallet.id}/connection`, body)
-      return walletSchema.parse(response.data)
+      return { wallet: walletSchema.parse(response.data), stamp }
     },
-    onSuccess: (next) => {
-      saveWallet(client, userId, next)
+    onSuccess: ({ wallet: next, stamp }) => {
+      if (!stamp || !commitOwnedWallet(client, stamp, next)) {
+        return
+      }
       setNetwork(next.connection.network ?? network)
     },
   })

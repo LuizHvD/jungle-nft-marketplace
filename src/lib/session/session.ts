@@ -7,7 +7,7 @@ import { connectSessionSocket } from '@/lib/realtime/session-socket.ts'
 import { loadSession } from './fetch-session.ts'
 import { clearPrivateCache, sessionQueryKey } from './private-cache.ts'
 import { retrySessionQuery } from './retry-session.ts'
-import { readStoredSession, writeStoredSession } from './storage.ts'
+import { readStoredSession, readStoredToken, writeStoredSession } from './storage.ts'
 
 export function sessionQueryOptions() {
   return {
@@ -24,6 +24,13 @@ export function useSession() {
   })
 }
 
+export class SessionUnavailableError extends Error {
+  constructor() {
+    super('Não foi possível validar a sessão.')
+    this.name = 'SessionUnavailableError'
+  }
+}
+
 export async function ensureSession(
   client: QueryClient,
 ): Promise<SessionResponse | null> {
@@ -33,8 +40,14 @@ export async function ensureSession(
   }
   try {
     return await client.fetchQuery(sessionQueryOptions())
-  } catch {
-    return readStoredSession()
+  } catch (error) {
+    if (!readStoredToken()) {
+      return null
+    }
+    if (error instanceof SessionUnavailableError) {
+      throw error
+    }
+    throw new SessionUnavailableError()
   }
 }
 

@@ -25,8 +25,7 @@ export async function resetDemo(page: Page) {
   await expect(page.getByRole('searchbox', { name: 'Busca' })).toBeVisible()
 }
 
-export async function login(page: Page, email: string, password: string) {
-  await page.goto('/login')
+export async function submitLogin(page: Page, email: string, password: string) {
   await page.getByLabel('E-mail').fill(email)
   await page.getByLabel('Senha').fill(password)
   const response = page.waitForResponse(
@@ -36,6 +35,11 @@ export async function login(page: Page, email: string, password: string) {
   await page.getByRole('button', { name: 'Sign In Button' }).click()
   expect((await response).ok()).toBeTruthy()
   await expect(page).not.toHaveURL(/\/login/)
+}
+
+export async function login(page: Page, email: string, password: string) {
+  await page.goto('/login')
+  await submitLogin(page, email, password)
 }
 
 export async function readSession(page: Page) {
