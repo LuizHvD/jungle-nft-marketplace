@@ -6,7 +6,7 @@ type SocketEvent = {
 }
 
 async function ready(page: Page): Promise<void> {
-  await page.goto('/')
+  await page.goto('/spike')
   await expect(
     page.getByRole('heading', { name: 'Spike Socket.IO' }),
   ).toBeVisible()
