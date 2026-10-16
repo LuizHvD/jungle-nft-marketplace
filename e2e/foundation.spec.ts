@@ -50,6 +50,10 @@ for (const viewport of viewports) {
 
     await page.goto('/')
     await expectSingleMain(page)
+    await expect(page.getByRole('searchbox', { name: 'Busca' })).toBeVisible()
+    await expect(page.getByText('Aurora', { exact: true })).toBeVisible()
+    await expect(page.getByText('Moss', { exact: true })).toBeVisible()
+    await expect(page.getByText('Sold Out', { exact: true })).toBeVisible()
     await expectNoHorizontalOverflow(page)
 
     await page.goto('/fundacao')
@@ -116,7 +120,7 @@ test('texto e controles permanecem legíveis', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/')
 
-  const price = page.getByTestId('nft-price')
+  const price = page.getByTestId('nft-card-price-nft-aurora')
   await expect(price).toBeVisible()
   expect(await contrastRatio(price)).toBeGreaterThanOrEqual(4.5)
 

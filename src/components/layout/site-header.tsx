@@ -12,7 +12,13 @@ export function SiteHeader() {
         </Link>
         <DesktopNav />
         <div className="flex items-center">
-          <Button>Search Icon</Button>
+          <Button
+            onClick={() => {
+              document.getElementById('catalog-search')?.focus()
+            }}
+          >
+            Search Icon
+          </Button>
           <Button>Cart</Button>
           <Button>Login</Button>
         </div>

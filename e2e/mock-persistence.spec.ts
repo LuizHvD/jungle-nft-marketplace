@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test'
 const guestId = 'guest-persist'
 
 async function ready(page: import('@playwright/test').Page): Promise<void> {
-  await page.goto('/')
+  await page.goto('/spike')
   await expect(
     page.getByRole('heading', { name: 'Spike Socket.IO' }),
   ).toBeVisible()

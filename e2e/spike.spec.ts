@@ -16,7 +16,7 @@ test('preço muda só depois do evento nft.updated', async ({ page }) => {
     }
   })
 
-  await page.goto('/')
+  await page.goto('/spike')
   await expect(page.getByTestId('socket-status')).toHaveText('connected')
   await expect(page.getByTestId('nft-price')).toHaveText(initialSpikePrice)
   const readsBeforeBump = catalogReads
@@ -44,7 +44,7 @@ test('websocket fora do Socket.IO chega ao servidor original', async ({
   const echo = await startEchoServer()
 
   try {
-    await page.goto('/')
+    await page.goto('/spike')
     const connected = echo.whenUpgrade()
     await page.evaluate((url) => {
       new WebSocket(url)
@@ -66,7 +66,7 @@ test('HMR do Vite permanece conectado', async ({ page }, testInfo) => {
     })
   })
 
-  await page.goto('/')
+  await page.goto('/spike')
   await viteConnected
 })
 
