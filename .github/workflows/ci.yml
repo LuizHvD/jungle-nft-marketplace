@@ -33,6 +33,9 @@ jobs:
       - name: Lint
         run: pnpm lint
 
+      - name: Testes unitários
+        run: pnpm test:unit
+
       - name: Build
         run: pnpm build
 
