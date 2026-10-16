@@ -124,7 +124,7 @@ test('texto e controles permanecem legíveis', async ({ page }) => {
   await expect(price).toBeVisible()
   expect(await contrastRatio(price)).toBeGreaterThanOrEqual(4.5)
 
-  const filter = page.getByRole('button', { name: 'Iconly/Curved/Filter' })
+  const filter = page.getByRole('button', { name: 'Filtros' })
   await expect(filter.locator('svg')).toBeVisible()
   expect(await contrastRatio(filter)).toBeGreaterThanOrEqual(4.5)
 

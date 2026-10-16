@@ -22,7 +22,7 @@ async function openFilters(page: Page) {
   if (await availability.isVisible()) {
     return
   }
-  await page.getByRole('button', { name: 'Iconly/Curved/Filter' }).click()
+  await page.getByRole('button', { name: 'Filtros' }).click()
   await expect(availability).toBeVisible()
 }
 
@@ -249,6 +249,52 @@ test('skeleton, erro com retry e resposta obsoleta', async ({ page }) => {
   expect(auroraSettled).toBe(true)
   await expect(page.getByText('Moss', { exact: true })).toBeVisible()
   await expect(page.getByText('Aurora', { exact: true })).toHaveCount(0)
+})
+
+test('filtros abrem e fecham em 390 e 1440', async ({ page }) => {
+  for (const viewport of flowViewports) {
+    await page.setViewportSize({ ...viewport })
+    await page.goto('/')
+    await expect(page.getByText('Aurora', { exact: true })).toBeVisible()
+
+    const button = page.getByRole('button', { name: 'Filtros' })
+    const panel = page.locator('#catalog-filters')
+    await expect(panel).toHaveCount(1)
+    await expect(button).toHaveAttribute('aria-controls', 'catalog-filters')
+
+    const startsOpen = viewport.width === 1440
+    await expect(button).toHaveAttribute(
+      'aria-expanded',
+      startsOpen ? 'true' : 'false',
+    )
+    if (startsOpen) {
+      await expect(panel).toBeVisible()
+    } else {
+      await expect(panel).toBeHidden()
+    }
+
+    await button.click()
+    await expect(button).toHaveAttribute(
+      'aria-expanded',
+      startsOpen ? 'false' : 'true',
+    )
+    if (startsOpen) {
+      await expect(panel).toBeHidden()
+    } else {
+      await expect(panel).toBeVisible()
+    }
+
+    await button.click()
+    await expect(button).toHaveAttribute(
+      'aria-expanded',
+      startsOpen ? 'true' : 'false',
+    )
+    if (startsOpen) {
+      await expect(panel).toBeVisible()
+    } else {
+      await expect(panel).toBeHidden()
+    }
+  }
 })
 
 test('imagem do catálogo usa srcset AVIF e WebP', async ({ page }) => {

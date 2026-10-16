@@ -40,7 +40,7 @@ export function CatalogControls() {
   }
 
   return (
-    <div id="catalog-filters" className="flex flex-col gap-[16px]">
+    <div className="flex flex-col gap-[16px]">
       <label className="flex flex-col gap-[8px]">
         Disponibilidade
         <select

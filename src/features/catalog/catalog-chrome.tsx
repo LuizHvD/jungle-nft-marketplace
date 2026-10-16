@@ -14,7 +14,11 @@ export function CatalogChromeProvider({ children }: { children: ReactNode }) {
   const pathname = useRouterState({
     select: (state) => state.location.pathname,
   })
-  const [filtersOpen, setFiltersOpen] = useState(false)
+  const [filtersOpen, setFiltersOpen] = useState(
+    () =>
+      window.matchMedia('(min-width: 1440px)').matches &&
+      window.location.pathname === '/',
+  )
   const [draftQuery, setDraftQuery] = useState('')
   const [trackedPath, setTrackedPath] = useState(pathname)
 

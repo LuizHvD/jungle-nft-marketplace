@@ -1,5 +1,5 @@
 import { useNavigate, useRouterState, useSearch } from '@tanstack/react-router'
-import { useEffect, useState, type FormEvent } from 'react'
+import type { FormEvent } from 'react'
 
 import { Button } from '@/components/ui/button.tsx'
 import { ProvisionalIcon } from '@/components/layout/provisional-icon.tsx'
@@ -22,19 +22,6 @@ export function MobileSearch() {
   const current = useSearch({ strict: false })
   const { filtersOpen, toggleFilters, draftQuery, setDraftQuery } =
     useCatalogChrome()
-  const [desktop, setDesktop] = useState(false)
-
-  useEffect(() => {
-    const media = window.matchMedia('(min-width: 1440px)')
-    const apply = () => {
-      setDesktop(media.matches)
-    }
-    apply()
-    media.addEventListener('change', apply)
-    return () => {
-      media.removeEventListener('change', apply)
-    }
-  }, [])
 
   const urlQuery =
     onCatalog && 'q' in current && typeof current.q === 'string'
@@ -89,8 +76,8 @@ export function MobileSearch() {
       />
       <Button
         variant="primary"
-        aria-label="Iconly/Curved/Filter"
-        aria-expanded={filtersOpen || (onCatalog && desktop)}
+        aria-label="Filtros"
+        aria-expanded={filtersOpen}
         aria-controls="catalog-filters"
         className="size-[45px] shrink-0 rounded-[14px] p-[12px]"
         onClick={toggleFilters}

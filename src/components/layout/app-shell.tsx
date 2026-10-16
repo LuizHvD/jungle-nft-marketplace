@@ -40,21 +40,25 @@ function ShellFrame({ children }: AppShellProps) {
       </div>
       <div
         data-catalog={onCatalog ? 'true' : 'false'}
-        className="group/shell grid flex-1 grid-cols-1 content-start data-[catalog=true]:min-[1440px]:grid-cols-[240px_minmax(0,1fr)] data-[catalog=true]:min-[1440px]:gap-x-[16px]"
+        data-filters-open={filtersOpen ? 'true' : 'false'}
+        className="grid flex-1 grid-cols-1 content-start data-[catalog=true]:data-[filters-open=true]:min-[1440px]:grid-cols-[240px_minmax(0,1fr)] data-[catalog=true]:data-[filters-open=true]:min-[1440px]:gap-x-[16px]"
       >
         <div
           id="catalog-filters"
           className={cn(
             'px-[24px] min-[1440px]:px-0',
             filtersOpen ? 'block' : 'hidden',
-            'min-[1440px]:group-data-[catalog=true]/shell:col-start-1',
-            'min-[1440px]:group-data-[catalog=true]/shell:block',
-            'min-[1440px]:group-data-[catalog=true]/shell:w-[240px]',
+            onCatalog && 'min-[1440px]:w-[240px]',
           )}
         >
           <CatalogControls />
         </div>
-        <div className="min-w-0 px-[24px] min-[1440px]:px-0 min-[1440px]:group-data-[catalog=true]/shell:col-start-2">
+        <div
+          className={cn(
+            'min-w-0 px-[24px] min-[1440px]:px-0',
+            onCatalog && filtersOpen && 'min-[1440px]:col-start-2',
+          )}
+        >
           {children}
         </div>
       </div>
