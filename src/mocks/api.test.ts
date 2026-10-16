@@ -410,6 +410,105 @@ describe('contratos do mock', () => {
     ])
   })
 
+  it('recusa cotação com a mesma edição duplicada acima do estoque', async () => {
+    const token = await login('ada@demo.jungle', 'ada-demo-pass')
+    const response = await api('/api/quotes', {
+      method: 'POST',
+      token,
+      body: JSON.stringify({
+        items: [
+          { nftId: 'nft-aurora', editionId: 'edition-aurora-1', quantity: 3 },
+          { nftId: 'nft-aurora', editionId: 'edition-aurora-1', quantity: 3 },
+        ],
+        walletId: 'wallet-ada',
+        network: 'demo-mainnet',
+      }),
+    })
+    expect(response.status).toBe(422)
+    expect(response.data?.code).toBe('QUANTITY_LIMIT')
+
+    const withinStock = await api('/api/quotes', {
+      method: 'POST',
+      token,
+      body: JSON.stringify({
+        items: [
+          { nftId: 'nft-aurora', editionId: 'edition-aurora-1', quantity: 2 },
+          { nftId: 'nft-aurora', editionId: 'edition-aurora-1', quantity: 2 },
+        ],
+        walletId: 'wallet-ada',
+        network: 'demo-mainnet',
+      }),
+    })
+    expect(withinStock.status).toBe(200)
+    const ordered = await api('/api/orders', {
+      method: 'POST',
+      token,
+      headers: { 'idempotency-key': 'aggregated-stock' },
+      body: JSON.stringify({
+        quoteId: withinStock.data?.quoteId,
+        expectedTotal: withinStock.data?.total,
+      }),
+    })
+    expect(ordered.status).toBe(200)
+    const supply = readMemoryState().nfts.find((nft) => nft.id === 'nft-aurora')
+      ?.editions[0]?.availableSupply
+    expect(supply).toBe(0)
+  })
+
+  it('recusa pedido novo com carteira desconectada e ainda faz replay', async () => {
+    const token = await login('ada@demo.jungle', 'ada-demo-pass')
+    const quote = await quoteFor(token, 'nft-aurora', 'edition-aurora-1')
+    await api('/api/wallets/wallet-ada/connection', {
+      method: 'POST',
+      token,
+      body: JSON.stringify({ network: 'demo-mainnet', action: 'disconnect' }),
+    })
+    const blocked = await api('/api/orders', {
+      method: 'POST',
+      token,
+      headers: { 'idempotency-key': 'while-disconnected' },
+      body: JSON.stringify({
+        quoteId: quote.quoteId,
+        expectedTotal: quote.total,
+      }),
+    })
+    expect(blocked.status).toBe(422)
+    expect(blocked.data?.code).toBe('VALIDATION')
+
+    await api('/api/wallets/wallet-ada/connection', {
+      method: 'POST',
+      token,
+      body: JSON.stringify({ network: 'demo-mainnet', action: 'connect' }),
+    })
+    const created = await api('/api/orders', {
+      method: 'POST',
+      token,
+      headers: { 'idempotency-key': 'after-reconnect' },
+      body: JSON.stringify({
+        quoteId: quote.quoteId,
+        expectedTotal: quote.total,
+      }),
+    })
+    expect(created.status).toBe(200)
+
+    await api('/api/wallets/wallet-ada/connection', {
+      method: 'POST',
+      token,
+      body: JSON.stringify({ network: 'demo-mainnet', action: 'disconnect' }),
+    })
+    const replay = await api('/api/orders', {
+      method: 'POST',
+      token,
+      headers: { 'idempotency-key': 'after-reconnect' },
+      body: JSON.stringify({
+        quoteId: quote.quoteId,
+        expectedTotal: quote.total,
+      }),
+    })
+    expect(replay.status).toBe(200)
+    expect(replay.data?.id).toBe(created.data?.id)
+  })
+
   it('mantém o carrinho do visitante no estado do ator', async () => {
     const created = await api('/api/cart/items', {
       method: 'POST',

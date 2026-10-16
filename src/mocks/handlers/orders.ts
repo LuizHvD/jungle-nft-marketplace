@@ -4,9 +4,10 @@ import {
   orderSchema,
   type OrderResponse,
 } from '../../contracts/orders.ts'
+import { aggregateEditionLines } from '../../domain/edition-lines.ts'
+import { keepTerminalStatus } from '../../domain/events.ts'
 import { hashIdempotencyPayload } from '../../domain/idempotency.ts'
 import { parseDecimalToWei } from '../../domain/money.ts'
-import { keepTerminalStatus } from '../../domain/events.ts'
 import { bearerToken, requireUser } from '../actor.ts'
 import { findCart, findEdition, type Order } from '../db.ts'
 import { ApiError } from '../errors.ts'
@@ -120,7 +121,34 @@ export const orderHandlers = [
             }
           }
 
-          for (const item of quote.items) {
+          if (!quote.walletId || !quote.network) {
+            throw new ApiError(422, 'VALIDATION', 'Informe carteira e rede.', {
+              walletId: 'Informe a carteira.',
+              network: 'Informe a rede.',
+            })
+          }
+          const wallet = state.wallets.find(
+            (item) => item.id === quote.walletId,
+          )
+          if (!wallet || wallet.userId !== userId) {
+            throw new ApiError(404, 'NOT_FOUND', 'Carteira não encontrada.')
+          }
+          const connected =
+            wallet.connection.status === 'connected' &&
+            wallet.connection.network === quote.network
+          if (!connected) {
+            throw new ApiError(
+              422,
+              'VALIDATION',
+              'Conexão da carteira inválida.',
+              {
+                network: 'Conecte a carteira na rede escolhida.',
+              },
+            )
+          }
+
+          const lines = aggregateEditionLines(quote.items)
+          for (const item of lines) {
             const found = findEdition(state, item.nftId, item.editionId)
             if (!found) {
               throw new ApiError(404, 'NOT_FOUND', 'Edição não encontrada.')
@@ -138,16 +166,17 @@ export const orderHandlers = [
 
           const status = keepTerminalStatus('pending', state.orderOutcome)
           if (status !== 'declined') {
-            for (const item of quote.items) {
+            for (const item of lines) {
               const found = findEdition(state, item.nftId, item.editionId)
-              if (found) {
-                found.edition.availableSupply -= item.quantity
+              if (!found || found.edition.availableSupply < item.quantity) {
+                throw new ApiError(409, 'SOLD_OUT', 'Estoque esgotado.')
               }
+              found.edition.availableSupply -= item.quantity
             }
           }
           if (status === 'confirmed') {
             const cart = findCart(state, userId)
-            for (const item of quote.items) {
+            for (const item of lines) {
               const line = cart.items.find(
                 (entry) =>
                   entry.nftId === item.nftId &&

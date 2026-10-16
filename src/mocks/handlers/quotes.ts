@@ -4,6 +4,7 @@ import {
   quoteSchema,
   type QuoteResponse,
 } from '../../contracts/quotes.ts'
+import { aggregateEditionLines } from '../../domain/edition-lines.ts'
 import { formatWei, parseDecimalToWei } from '../../domain/money.ts'
 import { quoteTotals } from '../../domain/quote.ts'
 import {
@@ -111,7 +112,7 @@ export const quoteHandlers = [
           throw new ApiError(404, 'NOT_FOUND', 'Rede não encontrada.')
         }
 
-        const items = body.items.map((item) => {
+        const items = aggregateEditionLines(body.items).map((item) => {
           const found = findEdition(state, item.nftId, item.editionId)
           if (!found) {
             throw new ApiError(404, 'NOT_FOUND', 'Edição não encontrada.')
