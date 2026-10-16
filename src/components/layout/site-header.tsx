@@ -1,7 +1,35 @@
-import { Link } from '@tanstack/react-router'
+import { Link, useRouterState } from '@tanstack/react-router'
+import { useQueryClient } from '@tanstack/react-query'
+import { useSyncExternalStore } from 'react'
 
 import { Button } from '@/components/ui/button.tsx'
 import { DesktopNav } from '@/components/layout/desktop-nav.tsx'
+import { logout } from '@/lib/session/logout.ts'
+import {
+  readStoredSession,
+  subscribeSession,
+} from '@/lib/session/storage.ts'
+
+function HeaderAccount() {
+  const client = useQueryClient()
+  const stored = useSyncExternalStore(subscribeSession, readStoredSession, () => null)
+  const href = useRouterState({ select: (state) => state.location.href })
+  if (stored) {
+    return (
+      <>
+        <Link to="/perfil">{stored.user.name}</Link>
+        <Button type="button" onClick={() => logout(client)}>
+          Sair
+        </Button>
+      </>
+    )
+  }
+  return (
+    <Link id="header-login" to="/login" search={{ returnTo: href }}>
+      Login
+    </Link>
+  )
+}
 
 export function SiteHeader() {
   return (
@@ -20,7 +48,7 @@ export function SiteHeader() {
             Search Icon
           </Button>
           <Button>Cart</Button>
-          <Button>Login</Button>
+          <HeaderAccount />
         </div>
       </div>
       <div className="h-0 w-full border-b-[0.3px] border-solid border-primary" />
