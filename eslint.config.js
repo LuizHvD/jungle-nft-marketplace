@@ -30,5 +30,26 @@ export default tseslint.config(
       'react-refresh/only-export-components': 'off',
     },
   },
+  {
+    files: [
+      'src/components/**/*.{ts,tsx}',
+      'src/features/**/*.{ts,tsx}',
+      'src/routes/**/*.{ts,tsx}',
+      'src/lib/**/*.{ts,tsx}',
+    ],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['**/mocks/**', '@/mocks/**'],
+              message: 'Componentes não importam handlers.',
+            },
+          ],
+        },
+      ],
+    },
+  },
   prettier,
 )
