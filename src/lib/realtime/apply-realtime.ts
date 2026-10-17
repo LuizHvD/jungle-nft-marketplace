@@ -8,7 +8,7 @@ import {
 } from '@/contracts/events.ts'
 import type { Nft, NftPage } from '@/contracts/nfts.ts'
 import type { OrderResponse } from '@/contracts/orders.ts'
-import { acceptEventVersion, acceptsOrderStatus } from '@/domain/events.ts'
+import { acceptsOrderStatus } from '@/domain/events.ts'
 import { sessionQueryKey } from '@/lib/session/private-cache.ts'
 
 import { publishPriceNotice } from './price-notice.ts'
@@ -122,33 +122,112 @@ export function shareOrder(
   return current
 }
 
-type NftDecision =
-  { kind: 'same' } | { kind: 'refetch' } | { kind: 'patch'; nft: Nft }
+type NftWrite = 'keep' | 'refetch' | Nft
 
-function updateNft(nft: Nft, event: NftUpdatedEvent): NftDecision {
-  if (event.version > nft.version) {
-    const editionId = event.editionId
-    const edition = editionId
-      ? nft.editions.find((item) => item.id === editionId)
-      : undefined
-    if (!editionId || !edition) {
-      return { kind: 'refetch' }
-    }
-    const availableSupply = event.availableSupply ?? edition.availableSupply
-    return {
-      kind: 'patch',
-      nft: {
-        ...nft,
-        version: event.version,
-        editions: nft.editions.map((item) =>
-          item.id === editionId
-            ? { ...item, price: event.price, availableSupply }
-            : item,
-        ),
-      },
-    }
+function nextNft(nft: Nft, event: NftUpdatedEvent): NftWrite {
+  if (nft.id !== event.nftId || event.version <= nft.version) {
+    return 'keep'
   }
-  return { kind: 'same' }
+  const editionId = event.editionId
+  const edition = editionId
+    ? nft.editions.find((item) => item.id === editionId)
+    : undefined
+  if (!editionId || !edition) {
+    return 'refetch'
+  }
+  const availableSupply = event.availableSupply ?? edition.availableSupply
+  return {
+    ...nft,
+    version: event.version,
+    editions: nft.editions.map((item) =>
+      item.id === editionId
+        ? { ...item, price: event.price, availableSupply }
+        : item,
+    ),
+  }
+}
+
+function commitNft(
+  client: QueryClient,
+  queryKey: readonly unknown[],
+  event: NftUpdatedEvent,
+): 'patched' | 'refetch' | 'keep' {
+  let outcome: 'patched' | 'refetch' | 'keep' = 'keep'
+  client.setQueryData(queryKey, (current: unknown) => {
+    if (isNft(current)) {
+      const next = nextNft(current, event)
+      if (next === 'keep' || next === 'refetch') {
+        outcome = next
+        return current
+      }
+      outcome = 'patched'
+      return next
+    }
+    if (!isNftPage(current)) {
+      return current
+    }
+    let patched = false
+    let refetch = false
+    const items = current.items.map((item) => {
+      if (item.id !== event.nftId) {
+        return item
+      }
+      const next = nextNft(item, event)
+      if (next === 'keep') {
+        return item
+      }
+      if (next === 'refetch') {
+        refetch = true
+        return item
+      }
+      patched = true
+      return next
+    })
+    if (patched) {
+      outcome = 'patched'
+      return { ...current, items }
+    }
+    outcome = refetch ? 'refetch' : 'keep'
+    return current
+  })
+  return outcome
+}
+
+function sessionForToken(
+  client: QueryClient,
+  token: string,
+): SessionResponse | null {
+  const session = client.getQueryData<SessionResponse>(sessionQueryKey)
+  if (!session || session.token !== token) {
+    return null
+  }
+  return session
+}
+
+function commitOrder(
+  client: QueryClient,
+  queryKey: readonly unknown[],
+  event: { orderId: string; version: number; status: OrderResponse['status'] },
+): boolean {
+  let applied = false
+  client.setQueryData(queryKey, (current: unknown) => {
+    if (!isOrder(current) || current.id !== event.orderId) {
+      return current
+    }
+    if (
+      event.version > current.version &&
+      acceptsOrderStatus(current.status, event.status)
+    ) {
+      applied = true
+      return {
+        ...current,
+        status: event.status,
+        version: event.version,
+      }
+    }
+    return current
+  })
+  return applied
 }
 
 function citesNft(data: unknown, nftId: string): boolean {
@@ -219,56 +298,33 @@ export async function applyNftUpdated(
   }
   seen.add(event.eventId)
 
-  let touched = false
+  let patched = false
   let sawNft = false
+  const refetchKeys: Array<readonly unknown[]> = []
   for (const query of client.getQueryCache().findAll({ queryKey: ['nfts'] })) {
     const data = query.state.data
-    if (isNft(data)) {
-      if (data.id !== event.nftId) {
-        continue
-      }
-      sawNft = true
-      const next = updateNft(data, event)
-      if (next.kind === 'same') {
-        continue
-      }
-      touched = true
-      if (next.kind === 'patch') {
-        await client.cancelQueries({ queryKey: query.queryKey, exact: true })
-        client.setQueryData(query.queryKey, next.nft)
-      } else {
-        await refreshQuery(client, query.queryKey)
-      }
-      continue
-    }
-    if (!isNftPage(data)) {
-      continue
-    }
-    const current = data.items.find((item) => item.id === event.nftId)
-    if (!current) {
+    const inDetail = isNft(data) && data.id === event.nftId
+    const inPage =
+      isNftPage(data) && data.items.some((item) => item.id === event.nftId)
+    if (!inDetail && !inPage) {
       continue
     }
     sawNft = true
-    const next = updateNft(current, event)
-    if (next.kind === 'same') {
-      continue
+    await client.cancelQueries({ queryKey: query.queryKey, exact: true })
+    const outcome = commitNft(client, query.queryKey, event)
+    if (outcome === 'patched') {
+      patched = true
     }
-    touched = true
-    if (next.kind === 'patch') {
-      await client.cancelQueries({ queryKey: query.queryKey, exact: true })
-      client.setQueryData(query.queryKey, {
-        ...data,
-        items: data.items.map((item) =>
-          item.id === event.nftId ? next.nft : item,
-        ),
-      })
-    } else {
-      await refreshQuery(client, query.queryKey)
+    if (outcome === 'refetch') {
+      refetchKeys.push(query.queryKey)
     }
   }
 
-  if (touched || !sawNft) {
+  if (patched || !sawNft) {
     await invalidateCommerce(client, event.nftId)
+  }
+  for (const queryKey of refetchKeys) {
+    await refreshQuery(client, queryKey)
   }
 }
 
@@ -287,55 +343,31 @@ export async function applyOrderUpdated(
     return
   }
 
-  const session = client.getQueryData<SessionResponse>(sessionQueryKey)
-  if (!session || session.token !== token) {
+  const session = sessionForToken(client, token)
+  if (!session) {
     seen.add(event.eventId)
     return
   }
 
-  const queries = client.getQueryCache().findAll({
-    predicate: (query) =>
-      query.queryKey[0] === 'orders' &&
-      query.queryKey[1] === session.user.id &&
-      query.queryKey[2] === event.orderId,
-  })
+  const queryKey = ['orders', session.user.id, event.orderId] as const
+  const hadOrder = isOrder(client.getQueryData(queryKey))
+  await client.cancelQueries({ queryKey, exact: true })
 
-  if (queries.length === 0) {
+  const still = sessionForToken(client, token)
+  if (!still || still.user.id !== session.user.id) {
     seen.add(event.eventId)
-    void client.invalidateQueries({
-      queryKey: ['orders', session.user.id, event.orderId],
-    })
     return
   }
 
-  let applied = false
-  for (const query of queries) {
-    const current = query.state.data
-    if (!isOrder(current) || current.id !== event.orderId) {
-      continue
-    }
-    if (
-      !acceptEventVersion(current.version, event.version, seen, event.eventId)
-    ) {
-      continue
-    }
-    if (!acceptsOrderStatus(current.status, event.status)) {
-      continue
-    }
-    await client.cancelQueries({ queryKey: query.queryKey, exact: true })
-    client.setQueryData(query.queryKey, {
-      ...current,
-      status: event.status,
-      version: event.version,
-    })
-    applied = true
-  }
+  const applied = commitOrder(client, queryKey, event)
   seen.add(event.eventId)
-  if (applied) {
-    await client.invalidateQueries({
-      queryKey: ['orders', session.user.id, event.orderId],
-    })
+  if (!applied && hadOrder) {
+    return
   }
+  if (!sessionForToken(client, token)) {
+    return
+  }
+  await client.invalidateQueries({ queryKey })
 }
 
 export function refetchRealtime(

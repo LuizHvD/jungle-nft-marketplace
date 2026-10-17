@@ -372,6 +372,159 @@ describe('cache de tempo real', () => {
     expect(invalidated).toEqual([])
   })
 
+  it('evento v2 não cobre o v3 quando o cancelamento resolve invertido', async () => {
+    const client = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    })
+    vi.spyOn(client, 'invalidateQueries').mockResolvedValue()
+    const gates: Array<() => void> = []
+    let calls = 0
+    vi.spyOn(client, 'cancelQueries').mockImplementation(() => {
+      const index = calls
+      calls += 1
+      if (index < 2) {
+        return new Promise((resolve) => {
+          gates.push(() => resolve(undefined))
+        })
+      }
+      return Promise.resolve()
+    })
+    const detailKey = ['nfts', 'detail', 'nft-aurora'] as const
+    const pageKey = ['nfts', { page: 1 }] as const
+    client.setQueryData(detailKey, nft(1))
+    client.setQueryData(pageKey, page(nft(1)))
+    client.setQueryData(['quote', 'user-ada', 'aurora'], {
+      items: [{ nftId: 'nft-aurora' }],
+    })
+    const seen = new Set<string>()
+    const older = applyNftUpdated(
+      client,
+      {
+        eventId: 'event-v2',
+        nftId: 'nft-aurora',
+        editionId: 'edition-aurora-1',
+        version: 2,
+        price: '2.000000000000000000',
+        availableSupply: 2,
+      },
+      seen,
+    )
+    const newer = applyNftUpdated(
+      client,
+      {
+        eventId: 'event-v3',
+        nftId: 'nft-aurora',
+        editionId: 'edition-aurora-1',
+        version: 3,
+        price: '3.000000000000000000',
+        availableSupply: 1,
+      },
+      seen,
+    )
+    gates[1]?.()
+    await vi.waitFor(() => {
+      expect(client.getQueryData<Nft>(detailKey)?.version).toBe(3)
+    })
+    gates[0]?.()
+    await Promise.all([older, newer])
+    const detail = client.getQueryData<Nft>(detailKey)
+    const list = client.getQueryData<NftPage>(pageKey)
+    expect(detail?.version).toBe(3)
+    expect(detail?.editions[0]?.price).toBe('3.000000000000000000')
+    expect(list?.items[0]?.version).toBe(3)
+    expect(list?.items[0]?.editions[0]?.price).toBe('3.000000000000000000')
+    expect(list?.items[1]?.version).toBe(1)
+  })
+
+  it('pedido v2 não cobre o v3 quando o cancelamento resolve invertido', async () => {
+    const client = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    })
+    vi.spyOn(client, 'invalidateQueries').mockResolvedValue()
+    const gates: Array<() => void> = []
+    let calls = 0
+    vi.spyOn(client, 'cancelQueries').mockImplementation(() => {
+      const index = calls
+      calls += 1
+      if (index < 2) {
+        return new Promise((resolve) => {
+          gates.push(() => resolve(undefined))
+        })
+      }
+      return Promise.resolve()
+    })
+    client.setQueryData(sessionQueryKey, session)
+    const key = ['orders', 'user-ada', 'order-1'] as const
+    const current = order('pending', 1)
+    client.setQueryData(key, current)
+    const seen = new Set<string>()
+    const older = applyOrderUpdated(
+      client,
+      {
+        eventId: 'order-v2',
+        orderId: 'order-1',
+        version: 2,
+        status: 'pending',
+      },
+      seen,
+      'token-ada',
+    )
+    const newer = applyOrderUpdated(
+      client,
+      {
+        eventId: 'order-v3',
+        orderId: 'order-1',
+        version: 3,
+        status: 'confirmed',
+      },
+      seen,
+      'token-ada',
+    )
+    gates[1]?.()
+    await vi.waitFor(() => {
+      expect(client.getQueryData<OrderResponse>(key)?.version).toBe(3)
+    })
+    gates[0]?.()
+    await Promise.all([older, newer])
+    const stored = client.getQueryData<OrderResponse>(key)
+    expect(stored?.version).toBe(3)
+    expect(stored?.status).toBe('confirmed')
+    expect(stored?.snapshot).toEqual(current.snapshot)
+  })
+
+  it('troca de sessão durante o cancelamento não grava o pedido da Ada', async () => {
+    const { client, invalidated } = clientWith()
+    client.setQueryData(sessionQueryKey, session)
+    client.setQueryData(['orders', 'user-ada', 'order-1'], order('pending', 1))
+    vi.spyOn(client, 'cancelQueries').mockImplementation(() => {
+      client.setQueryData(sessionQueryKey, {
+        token: 'token-bia',
+        expiresAt: session.expiresAt,
+        user: { id: 'user-bia', email: 'bia@demo.jungle', name: 'Bia Demo' },
+      })
+      return Promise.resolve()
+    })
+    await applyOrderUpdated(
+      client,
+      {
+        eventId: 'event-switch',
+        orderId: 'order-1',
+        version: 2,
+        status: 'confirmed',
+      },
+      new Set(),
+      'token-ada',
+    )
+    const stored = client.getQueryData<OrderResponse>([
+      'orders',
+      'user-ada',
+      'order-1',
+    ])
+    expect(stored?.status).toBe('pending')
+    expect(stored?.version).toBe(1)
+    expect(invalidated).toEqual([])
+  })
+
   it('GET mais novo substitui o evento e GET antigo não regride terminal', () => {
     const pending = order('pending', 1)
     const confirmed = order('confirmed', 3)
