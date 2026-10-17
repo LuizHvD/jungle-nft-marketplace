@@ -9,6 +9,7 @@ const privateQueryRoots = [
   'favorites',
   'orders',
   'cart',
+  'quote',
 ] as const
 
 export function isPrivateQueryKey(queryKey: readonly unknown[]): boolean {

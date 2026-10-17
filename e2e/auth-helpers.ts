@@ -20,7 +20,15 @@ export async function resetDemo(page: Page) {
     return response.status
   })
   expect(status).toBe(200)
-  await page.evaluate(() => localStorage.removeItem('jungle.session'))
+  await page.evaluate(() => {
+    localStorage.removeItem('jungle.session')
+    localStorage.removeItem('jungle.guest-id')
+    localStorage.removeItem('jungle.order-attempt')
+    localStorage.removeItem('jungle.order-index')
+    sessionStorage.removeItem('jungle.checkout-draft')
+    sessionStorage.removeItem('jungle.coupon-draft')
+    sessionStorage.removeItem('jungle.merge-failed')
+  })
   await page.goto('/')
   await expect(page.getByRole('searchbox', { name: 'Busca' })).toBeVisible()
 }

@@ -184,6 +184,8 @@ Não substitui medida. Sai quando o painel entregar o valor.
 
 A tab bar continua no fluxo, com `min-height: 100dvh` no shell. Em página curta ela encosta na base da viewport. Em página longa ela vem depois do conteúdo e não cobre o `main`.
 
+Carrinho, pagamento e confirmação usam o padding já medido do frame desktop (`24 / 120 / 24 / 120`, espaço 96) via o shell. No mobile, o carrinho usa o espaço 4 e o pagamento empilha no padding horizontal de 24 px do shell: os 28 px do frame `16:748` não são somados de novo. Não há frame mobile de confirmação; o recibo é a rota `/pedidos/$orderId`, não o modal, porque o contrato só devolve o pedido em `GET /api/orders/:id` e o refresh precisa reabri-lo. A referência da transação é `order.id`. O ícone `Cart` continua sem contagem.
+
 ## Uso no planejamento
 
 Os outros documentos de `docs/planning/` apontam para estas tabelas. A largura 1440, o frame 414×896 e o raio de 40 px são medidas do frame no Figma. Não definem a viewport da aplicação e não pedem borda arredondada no `body`. A Fase 2 aplicou o que esta página confirma. O fallback provisório está marcado à parte e não entra como medida do Figma.

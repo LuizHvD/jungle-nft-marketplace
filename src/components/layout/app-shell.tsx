@@ -59,6 +59,9 @@ function ShellFrame({ children }: AppShellProps) {
     <div className="flex min-h-dvh flex-col gap-[16px] min-[1440px]:gap-[96px] min-[1440px]:px-[120px] min-[1440px]:py-[24px]">
       <SessionSocketBinding />
       <SiteHeader />
+      <div className="flex px-[24px] min-[1440px]:hidden">
+        <Link to="/carrinho">Cart</Link>
+      </div>
       <MobileAccount />
       {authScreen ? null : (
         <div className="px-[24px] pt-[40px] min-[1440px]:px-0 min-[1440px]:pt-0">

@@ -130,7 +130,7 @@ test('detalhe direto, NFT ausente, rota desconhecida e quantidade', async ({
       cartPosts.push(url.pathname)
     }
   })
-  await expect(page.getByRole('button', { name: 'Compra' })).toBeDisabled()
+  await expect(page.getByRole('button', { name: 'Compra' })).toBeEnabled()
   expect(cartPosts).toHaveLength(0)
 
   await page.goto('/nfts/nft-sold')

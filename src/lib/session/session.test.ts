@@ -52,6 +52,7 @@ function seed(client: QueryClient) {
   client.setQueryData(['favorites', 'user-ada'], { nftIds: ['nft-aurora'] })
   client.setQueryData(['orders', 'user-ada'], { id: 'order-ada-1' })
   client.setQueryData(['cart', 'user-ada'], { items: [] })
+  client.setQueryData(['quote', 'user-ada', 'sig'], { quoteId: 'quote-ada' })
   client.setQueryData(['nfts', {}], { items: ['aurora'] })
   client.setQueryData(['spike-nft'], { id: 'spike' })
 }
@@ -128,6 +129,7 @@ describe('sessão', () => {
     expect(client.getQueryData(['favorites', 'user-ada'])).toBeUndefined()
     expect(client.getQueryData(['orders', 'user-ada'])).toBeUndefined()
     expect(client.getQueryData(['cart', 'user-ada'])).toBeUndefined()
+    expect(client.getQueryData(['quote', 'user-ada', 'sig'])).toBeUndefined()
     expect(client.getQueryData(['nfts', {}])).toEqual({ items: ['aurora'] })
     expect(client.getQueryData(['spike-nft'])).toEqual({ id: 'spike' })
   })

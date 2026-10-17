@@ -9,7 +9,11 @@ import {
 
 import { AppShell } from '../components/layout/app-shell.tsx'
 import { queryClient } from '../app/query-client.ts'
-import { PrivatePlaceholder } from '../features/account/private-placeholder.tsx'
+import { CartPage } from '../features/cart/cart-page.tsx'
+import { CheckoutPage } from '../features/checkout/checkout-page.tsx'
+import { FavoritesPage } from '../features/favorites/favorites-page.tsx'
+import { OrderDetailPage } from '../features/orders/order-detail-page.tsx'
+import { OrdersPage } from '../features/orders/orders-page.tsx'
 import { parseCatalogSearch } from '../features/catalog/catalog-search.ts'
 import { CatalogPage } from '../features/catalog/catalog-page.tsx'
 import { LoginPage } from '../features/auth/login-page.tsx'
@@ -106,14 +110,23 @@ const walletsRoute = createRoute({
   component: WalletsPage,
 })
 
+function parseCheckoutSearch(search: Record<string, unknown>) {
+  return { step: search.step === 'revisao' ? ('revisao' as const) : ('dados' as const) }
+}
+
+const cartRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/carrinho',
+  component: CartPage,
+})
+
 const checkoutRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/checkout',
+  validateSearch: parseCheckoutSearch,
   beforeLoad: requireSession,
   errorComponent: SessionUnavailablePage,
-  component: function CheckoutPlaceholder() {
-    return <PrivatePlaceholder title="Checkout" />
-  },
+  component: CheckoutPage,
 })
 
 const favoritesRoute = createRoute({
@@ -121,9 +134,7 @@ const favoritesRoute = createRoute({
   path: '/favoritos',
   beforeLoad: requireSession,
   errorComponent: SessionUnavailablePage,
-  component: function FavoritesPlaceholder() {
-    return <PrivatePlaceholder title="Favoritos" />
-  },
+  component: FavoritesPage,
 })
 
 const ordersRoute = createRoute({
@@ -131,8 +142,17 @@ const ordersRoute = createRoute({
   path: '/pedidos',
   beforeLoad: requireSession,
   errorComponent: SessionUnavailablePage,
-  component: function OrdersPlaceholder() {
-    return <PrivatePlaceholder title="Pedidos" />
+  component: OrdersPage,
+})
+
+const orderDetailRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/pedidos/$orderId',
+  beforeLoad: requireSession,
+  errorComponent: SessionUnavailablePage,
+  component: function OrderRoute() {
+    const { orderId } = orderDetailRoute.useParams()
+    return <OrderDetailPage orderId={orderId} />
   },
 })
 
@@ -161,9 +181,11 @@ const routeTree = rootRoute.addChildren([
   registerRoute,
   profileRoute,
   walletsRoute,
+  cartRoute,
   checkoutRoute,
   favoritesRoute,
   ordersRoute,
+  orderDetailRoute,
   spikeRoute,
   foundationRoute,
   unknownRoute,

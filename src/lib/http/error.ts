@@ -16,6 +16,16 @@ export function isNotFoundError(error: unknown): boolean {
   return axios.isAxiosError(error) && error.response?.status === 404
 }
 
+export function isAbortError(error: unknown): boolean {
+  if (!axios.isAxiosError(error)) {
+    return false
+  }
+  if (error.response?.status === 499) {
+    return true
+  }
+  return error.code === 'ERR_CANCELED' || error.code === 'ECONNABORTED'
+}
+
 export function apiErrorCode(error: unknown): string | null {
   if (!axios.isAxiosError(error)) {
     return null

@@ -86,37 +86,21 @@ Evidência: Playwright.
 
 Depende das Fases 3 e 4 para o `returnTo` do detalhe.
 
-## Fase 6 — Carrinho e favoritos
+## Fase 6+7 — Fluxo completo de compra
 
-Objetivo: carrinho persistente e favorito otimista.
+Objetivo: carrinho persistente, favorito otimista e compra confiável, numa única entrega.
 
-Escopo: CRUD, cupom aplicado e removido, merge, estoque, rollback do favorito. A cotação preliminar sem rede usa a taxa estimada da fixture e não fecha compra.
+Escopo: favoritos, carrinho de visitante e autenticado, merge, estoque, cupom na cotação, checkout com carteira e rede, revisão, idempotência, pending, confirmed, declined, histórico local e recibo. A cotação preliminar sem rede usa a taxa estimada da fixture e não fecha compra. Sem listener de `nft.updated` ou `order.updated`: isso continua na Fase 8.
 
-Requisitos: FAV-01, FAV-02, CART-01 a CART-04, UI-03, A11Y-06 no anúncio da mutation.
+Requisitos: FAV-01, FAV-02, CART-01 a CART-04, UI-02 a UI-05, UI-10, CHK-01 a CHK-03, CHK-05 a CHK-12, MON-03, EL-02, EL-03, SES-04 no checkout, A11Y-06 no anúncio da mutation.
 
-Teste: grupos 4 e 5.
+Teste: grupos 4, 5, 6 e 7.
 
-Aceite: visitante mantém o item no refresh e, ao entrar, não duplica a linha.
+Aceite: visitante mantém o item no refresh e, ao entrar, não duplica a linha. Timeout não cria segundo pedido. A chave do mesmo ator devolve o pedido já criado mesmo com a cotação expirada. B não recebe o pedido de A. Confirmado só aparece com a API. Falha não esvazia o carrinho.
 
 Evidência: Playwright.
 
 Depende das Fases 4 e 5.
-
-## Fase 7 — Checkout e pedidos
-
-Objetivo: compra confiável.
-
-Escopo: cotação, carteira, rede, revisão, idempotência, pending, confirmed, declined, recibo, remoção parcial do carrinho.
-
-Requisitos: UI-04, UI-05, UI-10, CHK-01 a CHK-03, CHK-05 a CHK-11, MON-03, EL-02, EL-03.
-
-Teste: grupos 6 e 7.
-
-Aceite: timeout não cria segundo pedido. A chave do mesmo ator devolve o pedido já criado mesmo com a cotação expirada. B não recebe o pedido de A. Confirmado só aparece com a API. Falha não esvazia o carrinho.
-
-Evidência: Playwright.
-
-Depende da Fase 6.
 
 ## Fase 8 — Tempo real
 
@@ -132,7 +116,11 @@ Aceite: preço novo invalida a cotação. Pedido pending sobrevive à queda sem 
 
 Evidência: Playwright atravessando o socket.
 
-Depende das Fases 1, 3, 4 e 7.
+Depende das Fases 1, 3, 4 e 6+7.
+
+## Fases 9+10 — consolidação futura
+
+A auditoria e a entrega serão planejadas e executadas juntas numa rodada futura. Os escopos abaixo permanecem separados até essa rodada.
 
 ## Fase 9 — Auditoria
 

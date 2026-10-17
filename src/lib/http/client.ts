@@ -3,6 +3,7 @@ import axios, { type InternalAxiosRequestConfig } from 'axios'
 import { errorBodySchema } from '@/contracts/errors.ts'
 import { queryClient } from '@/app/query-client.ts'
 import { safeReturnTo } from '@/lib/session/return-to.ts'
+import { readGuestId } from '@/lib/commerce/guest-id.ts'
 import { readStoredToken } from '@/lib/session/storage.ts'
 import { handleUnauthorized } from '@/lib/session/unauthorized.ts'
 
@@ -48,7 +49,9 @@ http.interceptors.request.use((config) => {
   if (stored) {
     config.headers.set('Authorization', `Bearer ${stored}`)
     config.authToken = stored
+    return config
   }
+  config.headers.set('x-guest-id', readGuestId())
   return config
 })
 
