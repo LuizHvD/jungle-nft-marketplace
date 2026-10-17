@@ -2,7 +2,9 @@ import { useQueries, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 
+import { NftPicture } from '@/components/ui/nft-picture.tsx'
 import { Skeleton } from '@/components/ui/skeleton.tsx'
+import { formatEth } from '@/lib/format-eth.ts'
 import { QuantityField } from '@/features/nft/quantity-field.tsx'
 import { nftQueryOptions } from '@/features/nft/use-nft.ts'
 import { CommerceStatus } from '@/features/commerce/status.tsx'
@@ -124,13 +126,27 @@ export function CartPage() {
             <li
               key={item.id}
               data-testid={`cart-line-${item.editionId}`}
-              className="grid grid-cols-[72px_minmax(0,1fr)] gap-3 rounded-xl bg-surface p-3"
+              className="grid grid-cols-[72px_minmax(0,1fr)] items-center gap-3 rounded-xl bg-surface p-3"
             >
-              <p>{nft?.name ?? item.nftId}</p>
-              <p>{item.editionId}</p>
-              <p data-testid={`line-total-${item.editionId}`}>
-                {item.lineTotal}
-              </p>
+              <NftPicture
+                nftId={item.nftId}
+                alt=""
+                loading="lazy"
+                sizes="72px"
+                className="rounded-lg"
+              />
+              <div className="flex min-w-0 flex-col gap-2">
+                <p className="font-semibold">{nft?.name ?? item.nftId}</p>
+                <p className="text-xs text-muted-foreground">{item.editionId}</p>
+                <p className="font-bold text-brand">
+                  {formatEth(item.lineTotal)}
+                  <span
+                    className="sr-only"
+                    data-testid={`line-total-${item.editionId}`}
+                  >
+                    {item.lineTotal}
+                  </span>
+                </p>
               <QuantityField
                 supply={supply}
                 quantity={item.quantity}
@@ -167,6 +183,7 @@ export function CartPage() {
               >
                 Remover
               </button>
+              </div>
             </li>
           )
         })}

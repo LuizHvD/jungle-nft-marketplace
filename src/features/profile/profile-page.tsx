@@ -109,7 +109,7 @@ function AvatarForm({ profile }: { profile: Profile }) {
           aria-pressed={profile.avatarId === option.id}
           aria-label={`Avatar ${option.id}`}
           disabled={save.isPending}
-          className={`inline-flex rounded-full ${option.className}`}
+          className={`inline-flex size-10 items-center justify-center rounded-full ${option.className}`}
           onClick={() => void save.mutateAsync(option.id)}
         >
           {initial}

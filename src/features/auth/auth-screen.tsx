@@ -69,7 +69,7 @@ export function AuthScreen({ title, returnTo, children }: AuthScreenProps) {
       <dialog
         ref={dialogRef}
         aria-labelledby="auth-title"
-        className="w-full max-w-lg rounded-xl border border-border bg-surface p-8 text-inherit"
+        className="m-auto w-full max-w-lg rounded-xl border border-border bg-surface p-8 text-inherit"
       >
         <button
           type="button"
