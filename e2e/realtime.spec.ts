@@ -33,7 +33,7 @@ async function waitSocket(page: Page) {
 }
 
 async function openCart(page: Page) {
-  await page.getByRole('link', { name: 'Cart' }).click()
+  await page.getByRole('link', { name: 'Carrinho' }).click()
   await expect(page.getByRole('heading', { name: 'Carrinho' })).toBeVisible()
 }
 
@@ -114,16 +114,16 @@ test('preço do catálogo acompanha nft.updated e não volta atrás', async ({
   page,
 }) => {
   await expect(page.getByTestId('nft-card-price-nft-aurora')).toHaveText(
-    auroraPrice,
+    '1.50 ETH',
   )
   await waitSocket(page)
   await setScenario(page, 'price-change')
   await expect(page.getByTestId('nft-card-price-nft-aurora')).toHaveText(
-    nextPrice,
+    '2.00 ETH',
   )
   await setScenario(page, 'price-change')
   await expect(page.getByTestId('nft-card-price-nft-aurora')).toHaveText(
-    nextPrice,
+    '2.00 ETH',
   )
 })
 
@@ -162,7 +162,7 @@ test('visitante recebe nft.updated com a sessão fechada', async ({ page }) => {
   await waitSocket(page)
   await setScenario(page, 'price-change')
   await expect(page.getByTestId('nft-card-price-nft-aurora')).toHaveText(
-    nextPrice,
+    '2.00 ETH',
   )
 })
 
@@ -207,7 +207,7 @@ test('checkout bloqueia a confirmação enquanto a cotação definitiva atualiza
         '[data-testid="quote-state"]',
       )?.textContent
       const confirm = [...document.querySelectorAll('button')].some(
-        (button) => button.textContent === 'Confirm Button',
+        (button) => button.textContent === 'Confirmar compra',
       )
       if (state === 'blocked') {
         seen.blocked = true
@@ -244,7 +244,7 @@ test('checkout bloqueia a confirmação enquanto a cotação definitiva atualiza
   await expect(page.getByTestId('quote-state')).toHaveText('ready')
   await expect(page.getByTestId('quote-id')).not.toHaveText(quoteId)
   await expect(
-    page.getByRole('button', { name: 'Confirm Button' }),
+    page.getByRole('button', { name: 'Confirmar compra' }),
   ).toBeVisible()
 })
 
@@ -260,7 +260,7 @@ test('order.updated fica só com a Ada', async ({ page, context }) => {
   await page.goto('/checkout')
   await page.getByRole('button', { name: 'Continuar' }).click()
   await expect(page.getByTestId('quote-state')).toHaveText('ready')
-  await page.getByRole('button', { name: 'Confirm Button' }).click()
+  await page.getByRole('button', { name: 'Confirmar compra' }).click()
   await expect(page.getByTestId('order-status')).toHaveText('pending')
   const orderId = await page.getByTestId('order-id').innerText()
   await expect(bia.getByTestId('order-id')).toHaveText('order-bia-1')
@@ -324,7 +324,7 @@ test('reconexão consulta o pedido pending sem novo POST', async ({ page }) => {
       gets.push(url.pathname)
     }
   })
-  await page.getByRole('button', { name: 'Confirm Button' }).click()
+  await page.getByRole('button', { name: 'Confirmar compra' }).click()
   await expect(page.getByTestId('order-status')).toHaveText('pending')
   const orderId = await page.getByTestId('order-id').innerText()
   expect(posts).toHaveLength(1)

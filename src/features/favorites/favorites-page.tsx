@@ -6,6 +6,7 @@ import { apiErrorMessage } from '@/lib/http/error.ts'
 import { useSession } from '@/lib/session/session.ts'
 import { nftQueryOptions } from '@/features/nft/use-nft.ts'
 
+import { AccountNav } from '@/features/account/account-nav.tsx'
 import { CommerceStatus } from '@/features/commerce/status.tsx'
 
 import { useFavorites, useToggleFavorite } from './use-favorites.ts'
@@ -26,38 +27,51 @@ export function FavoritesPage() {
       : ''
 
   return (
-    <main className="flex flex-col gap-[4px] min-[1440px]:gap-[96px]">
-      <h1>Favoritos</h1>
-      <CommerceStatus message={message} />
-      {favorites.isPending ? (
-        <Skeleton data-testid="favorites-skeleton" className="h-[45px] w-full" />
-      ) : null}
-      {favorites.isError ? (
-        <p>{apiErrorMessage(favorites.error, 'Não foi possível listar os favoritos.')}</p>
-      ) : null}
-      {favorites.isSuccess && ids.length === 0 ? <p>Nenhum favorito.</p> : null}
-      <ul className="flex flex-col gap-[8px]">
-        {ids.map((nftId, index) => {
-          const nft = details[index]?.data
-          return (
-            <li key={nftId} data-testid={`favorite-${nftId}`}>
-              <Link to="/nfts/$nftId" params={{ nftId }}>
-                {nft?.name ?? nftId}
-              </Link>
-              <button
-                type="button"
-                aria-pressed="true"
-                disabled={toggle.isPending}
-                onClick={() => {
-                  void toggle.mutate({ nftId, favorite: false })
-                }}
-              >
-                Remover favorito
-              </button>
-            </li>
-          )
-        })}
-      </ul>
+    <main className="grid gap-8 py-6 md:grid-cols-[240px_minmax(0,1fr)]">
+      <AccountNav />
+      <div className="flex flex-col gap-4">
+        <h1 className="text-2xl font-bold">Lista de interesse</h1>
+        <CommerceStatus message={message} />
+        {favorites.isPending ? (
+          <Skeleton
+            data-testid="favorites-skeleton"
+            className="h-[45px] w-full"
+          />
+        ) : null}
+        {favorites.isError ? (
+          <p>
+            {apiErrorMessage(
+              favorites.error,
+              'Não foi possível listar os favoritos.',
+            )}
+          </p>
+        ) : null}
+        {favorites.isSuccess && ids.length === 0 ? (
+          <p>Nenhum favorito.</p>
+        ) : null}
+        <ul className="flex flex-col gap-[8px]">
+          {ids.map((nftId, index) => {
+            const nft = details[index]?.data
+            return (
+              <li key={nftId} data-testid={`favorite-${nftId}`}>
+                <Link to="/nfts/$nftId" params={{ nftId }}>
+                  {nft?.name ?? nftId}
+                </Link>
+                <button
+                  type="button"
+                  aria-pressed="true"
+                  disabled={toggle.isPending}
+                  onClick={() => {
+                    void toggle.mutate({ nftId, favorite: false })
+                  }}
+                >
+                  Remover favorito
+                </button>
+              </li>
+            )
+          })}
+        </ul>
+      </div>
     </main>
   )
 }

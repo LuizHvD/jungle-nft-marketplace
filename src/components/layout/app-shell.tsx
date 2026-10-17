@@ -3,21 +3,21 @@ import { Link, useRouterState } from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
 import { useSyncExternalStore } from 'react'
 
+import { Button } from '@/components/ui/button.tsx'
 import {
   CatalogChromeProvider,
   useCatalogChrome,
 } from '@/features/catalog/catalog-chrome.tsx'
 import { CatalogControls } from '@/features/catalog/catalog-controls.tsx'
-import { cn } from '@/lib/utils.ts'
-
-import { MobileNav } from '@/components/layout/mobile-nav.tsx'
-import { MobileSearch } from '@/components/layout/mobile-search.tsx'
-import { SiteFooter } from '@/components/layout/site-footer.tsx'
-import { SiteHeader } from '@/components/layout/site-header.tsx'
 import { SessionSocketBinding } from '@/features/auth/session-socket-binding.tsx'
-import { Button } from '@/components/ui/button.tsx'
+import { cn } from '@/lib/utils.ts'
 import { logout } from '@/lib/session/logout.ts'
 import { readStoredSession, subscribeSession } from '@/lib/session/storage.ts'
+
+import { MobileNav } from './mobile-nav.tsx'
+import { MobileSearch } from './mobile-search.tsx'
+import { SiteFooter } from './site-footer.tsx'
+import { SiteHeader } from './site-header.tsx'
 
 type AppShellProps = {
   children: ReactNode
@@ -33,14 +33,20 @@ export function AppShell({ children }: AppShellProps) {
 
 function MobileAccount() {
   const client = useQueryClient()
-  const stored = useSyncExternalStore(subscribeSession, readStoredSession, () => null)
+  const stored = useSyncExternalStore(
+    subscribeSession,
+    readStoredSession,
+    () => null,
+  )
   if (!stored) {
     return null
   }
   return (
-    <div className="flex px-[24px] min-[1440px]:hidden">
-      <Link to="/perfil">{stored.user.name}</Link>
-      <Button type="button" onClick={() => logout(client)}>
+    <div className="flex items-center justify-between px-6 md:hidden">
+      <Link to="/perfil" className="text-sm font-medium">
+        {stored.user.name}
+      </Link>
+      <Button type="button" variant="ghost" onClick={() => logout(client)}>
         Sair
       </Button>
     </div>
@@ -56,42 +62,25 @@ function ShellFrame({ children }: AppShellProps) {
   const { filtersOpen } = useCatalogChrome()
 
   return (
-    <div className="flex min-h-dvh flex-col gap-[16px] min-[1440px]:gap-[96px] min-[1440px]:px-[120px] min-[1440px]:py-[24px]">
+    <div className="flex min-h-dvh flex-col overflow-x-clip pb-36 md:pb-0">
       <SessionSocketBinding />
       <SiteHeader />
-      <div className="flex px-[24px] min-[1440px]:hidden">
-        <Link to="/carrinho">Cart</Link>
-      </div>
       <MobileAccount />
       {authScreen ? null : (
-        <div className="px-[24px] pt-[40px] min-[1440px]:px-0 min-[1440px]:pt-0">
+        <div className="page-container px-6 pt-4 md:px-8 min-[1440px]:px-[120px]">
           <MobileSearch />
         </div>
       )}
-      <div
-        data-catalog={onCatalog ? 'true' : 'false'}
-        data-filters-open={filtersOpen ? 'true' : 'false'}
-        className="grid flex-1 grid-cols-1 content-start data-[catalog=true]:data-[filters-open=true]:min-[1440px]:grid-cols-[240px_minmax(0,1fr)] data-[catalog=true]:data-[filters-open=true]:min-[1440px]:gap-x-[16px]"
-      >
-        <div
-          id="catalog-filters"
-          className={cn(
-            'px-[24px] min-[1440px]:px-0',
-            filtersOpen ? 'block' : 'hidden',
-            onCatalog && 'min-[1440px]:w-[240px]',
-          )}
-        >
-          <CatalogControls />
-        </div>
-        <div
-          className={cn(
-            'min-w-0 px-[24px] min-[1440px]:px-0',
-            authScreen && 'px-0',
-            onCatalog && filtersOpen && 'min-[1440px]:col-start-2',
-          )}
-        >
-          {children}
-        </div>
+      <div className="page-container flex-1 px-6 md:px-8 min-[1440px]:px-[120px]">
+        {onCatalog ? null : (
+          <div
+            id="catalog-filters"
+            className={cn(filtersOpen ? 'mb-4 block' : 'hidden')}
+          >
+            <CatalogControls />
+          </div>
+        )}
+        <div className="min-w-0">{children}</div>
       </div>
       <SiteFooter />
       <MobileNav />

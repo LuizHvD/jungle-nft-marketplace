@@ -13,6 +13,10 @@ const nftImageSlug = {
 
 export type NftImageSlug = (typeof nftImageSlug)[keyof typeof nftImageSlug]
 
+export const artSlugs = ['emerald', 'golden', 'ivory', 'sage'] as const
+
+export type ArtSlug = (typeof artSlugs)[number]
+
 export function imageSlugForNft(id: string): NftImageSlug | undefined {
   if (id === 'nft-aurora' || id === 'nft-moss' || id === 'nft-sold') {
     return nftImageSlug[id]
@@ -21,7 +25,7 @@ export function imageSlugForNft(id: string): NftImageSlug | undefined {
 }
 
 export function nftImageUrl(
-  slug: NftImageSlug,
+  slug: ArtSlug,
   width: (typeof nftImageWidths)[number],
   extension: 'avif' | 'webp',
 ): string {

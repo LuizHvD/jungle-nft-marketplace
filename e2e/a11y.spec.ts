@@ -61,7 +61,9 @@ for (const viewport of axeViewports) {
     await expectNoSeriousAxe(page)
 
     await page.goto('/checkout')
-    await expect(page.getByRole('heading', { name: 'Checkout' })).toBeVisible()
+    await expect(
+      page.getByRole('heading', { name: 'Pagamento com carteira' }),
+    ).toBeVisible()
     await expectNoSeriousAxe(page)
   })
 }
@@ -99,9 +101,9 @@ test('teclado chega ao erro do login e o diálogo devolve o foco', async ({
   await expect(page.locator('#email-error')).toBeVisible()
 
   await page.goto('/')
-  await page.getByRole('link', { name: 'Login' }).click()
+  await page.getByRole('link', { name: 'Entrar' }).click()
   await expect(page.getByRole('dialog')).toBeVisible()
-  await page.getByRole('button', { name: 'X' }).click()
+  await page.getByRole('button', { name: 'Fechar' }).click()
   await expect(page.locator('#header-login')).toBeFocused()
 })
 
@@ -126,7 +128,7 @@ test('zoom 200% mantém busca, compra e fechar diálogo alcançáveis', async ({
   await page.evaluate(() => {
     document.documentElement.style.zoom = '2'
   })
-  const buy = page.getByRole('button', { name: 'Compra' })
+  const buy = page.getByRole('button', { name: 'Comprar NFT' })
   await buy.scrollIntoViewIfNeeded()
   await expect(buy).toBeVisible()
   await expect(buy).toBeEnabled()
@@ -136,7 +138,7 @@ test('zoom 200% mantém busca, compra e fechar diálogo alcançáveis', async ({
   await page.evaluate(() => {
     document.documentElement.style.zoom = '2'
   })
-  const close = page.getByRole('button', { name: 'X' })
+  const close = page.getByRole('button', { name: 'Fechar' })
   await close.scrollIntoViewIfNeeded()
   await expect(close).toBeVisible()
   expect(await clipped(close)).toBe(false)
@@ -149,7 +151,7 @@ test('mutação e preço em tempo real entram na live region', async ({
 }) => {
   await page.setViewportSize({ width: 1440, height: 900 })
   await page.goto('/nfts/nft-aurora')
-  await page.getByRole('button', { name: 'Compra' }).click()
+  await page.getByRole('button', { name: 'Comprar NFT' }).click()
   const added = page.getByTestId('commerce-status')
   await expect(added).toHaveAttribute('aria-live', 'polite')
   await expect(added).toHaveText('Adicionado ao carrinho.')

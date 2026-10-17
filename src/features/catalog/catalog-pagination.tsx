@@ -19,7 +19,7 @@ export function CatalogPagination({
   const pages = Array.from({ length: pageCount }, (_, index) => index + 1)
 
   return (
-    <nav aria-label="Paginação" className="flex gap-[8px]">
+    <nav aria-label="Paginação" className="flex gap-2">
       {pages.map((pageNumber) => (
         <Link
           key={pageNumber}
@@ -33,6 +33,7 @@ export function CatalogPagination({
             return { ...next, page: pageNumber }
           }}
           aria-current={pageNumber === page ? 'page' : undefined}
+          className="flex size-10 items-center justify-center rounded-full bg-primary text-sm font-bold text-ink aria-[current=page]:outline aria-[current=page]:outline-2 aria-[current=page]:outline-offset-2"
         >
           {pageNumber}
         </Link>

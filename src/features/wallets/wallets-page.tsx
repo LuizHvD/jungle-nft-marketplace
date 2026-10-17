@@ -3,11 +3,16 @@ import { useForm } from 'react-hook-form'
 
 import { walletCreateSchema, walletSchema } from '@/contracts/wallets.ts'
 import { Skeleton } from '@/components/ui/skeleton.tsx'
-import { applyFieldErrors, focusFirstInvalid, zodResolver } from '@/lib/forms/zod-resolver.ts'
+import {
+  applyFieldErrors,
+  focusFirstInvalid,
+  zodResolver,
+} from '@/lib/forms/zod-resolver.ts'
 import { http } from '@/lib/http/client.ts'
 import { apiErrorMessage } from '@/lib/http/error.ts'
 import { useSession } from '@/lib/session/session.ts'
 
+import { AccountNav } from '@/features/account/account-nav.tsx'
 import { TextField } from '@/features/auth/text-field.tsx'
 import { commitOwnedWallet, readActorStamp } from '@/lib/session/owned-cache.ts'
 
@@ -52,7 +57,10 @@ function CreateWalletForm() {
             return
           }
           form.setError('root', {
-            message: apiErrorMessage(error, 'Não foi possível cadastrar a carteira.'),
+            message: apiErrorMessage(
+              error,
+              'Não foi possível cadastrar a carteira.',
+            ),
           })
         }
       }, focusFirstInvalid)}
@@ -77,7 +85,11 @@ function CreateWalletForm() {
       {form.formState.errors.root?.message ? (
         <p role="alert">{form.formState.errors.root.message}</p>
       ) : null}
-      <button type="submit" aria-busy={create.isPending} disabled={create.isPending}>
+      <button
+        type="submit"
+        aria-busy={create.isPending}
+        disabled={create.isPending}
+      >
         Cadastrar carteira
       </button>
     </form>
@@ -103,7 +115,10 @@ export function WalletsPage() {
       <main>
         <h1>Carteiras</h1>
         <p role="alert">
-          {apiErrorMessage(wallets.error, 'Não foi possível carregar as carteiras.')}
+          {apiErrorMessage(
+            wallets.error,
+            'Não foi possível carregar as carteiras.',
+          )}
         </p>
         <button type="button" onClick={() => void wallets.refetch()}>
           Tentar de novo
@@ -113,16 +128,19 @@ export function WalletsPage() {
   }
 
   return (
-    <main>
-      <h1>Carteiras</h1>
-      <ul>
-        {wallets.data.wallets.map((wallet) => (
-          <li key={wallet.id}>
-            <WalletRow wallet={wallet} />
-          </li>
-        ))}
-      </ul>
-      <CreateWalletForm />
+    <main className="grid gap-8 py-6 md:grid-cols-[240px_minmax(0,1fr)]">
+      <AccountNav />
+      <div className="flex flex-col gap-6">
+        <h1 className="text-2xl font-bold">Carteiras</h1>
+        <ul className="flex flex-col gap-4">
+          {wallets.data.wallets.map((wallet) => (
+            <li key={wallet.id}>
+              <WalletRow wallet={wallet} />
+            </li>
+          ))}
+        </ul>
+        <CreateWalletForm />
+      </div>
     </main>
   )
 }

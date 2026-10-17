@@ -48,9 +48,11 @@ test('MSW, worker, refresh, preço, login, carrinho, checkout e pedido', async (
   await expect(page.getByTestId('cart-line-edition-aurora-1')).toBeVisible()
 
   await page.goto('/checkout')
-  await expect(page.getByRole('heading', { name: 'Checkout' })).toBeVisible()
   await expect(
-    page.getByRole('button', { name: 'Confirm Button' }),
+    page.getByRole('heading', { name: 'Pagamento com carteira' }),
+  ).toBeVisible()
+  await expect(
+    page.getByRole('button', { name: 'Confirmar compra' }),
   ).toHaveCount(0)
   await page.getByRole('button', { name: 'Continuar' }).click()
   await expect(page.getByTestId('quote-definitive')).toHaveText(
@@ -59,7 +61,7 @@ test('MSW, worker, refresh, preço, login, carrinho, checkout e pedido', async (
   await expect(page.getByTestId('quote-state')).toHaveText('ready')
 
   await setScenario(page, 'payment-confirmed')
-  await page.getByRole('button', { name: 'Confirm Button' }).click()
+  await page.getByRole('button', { name: 'Confirmar compra' }).click()
   await expect(page.getByTestId('order-receipt')).toBeVisible()
   await expect(page.getByTestId('order-status')).toHaveText('confirmed')
   const orderId = await page.getByTestId('order-id').innerText()

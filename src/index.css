@@ -1,27 +1,69 @@
 @import 'tailwindcss';
+@import '@fontsource-variable/roboto-mono';
 
-@theme {
+@theme inline {
+  --font-sans: 'Roboto Mono Variable', ui-monospace, monospace;
   --color-ink: #140d0a;
   --color-primary: #d28a4c;
   --color-surface-card: #241612;
-  /* Fallback de legibilidade. Não é token medido no Figma. */
-  --color-text-fallback: #ffffff;
+  --color-background: #140d0a;
+  --color-foreground: #f5f1eb;
+  --color-surface: #241612;
+  --color-surface-strong: #38220f;
+  --color-brand: #e89b55;
+  --color-muted: #2e1d16;
+  --color-muted-foreground: #cfb28c;
+  --color-subtle-foreground: #b39463;
+  --color-border: #442c1a;
+  --color-input: #3f2319;
+  --color-ring: #d28a4c;
+  --color-destructive: #f0805f;
+  --color-accent: #38220f;
+  /* Legado do spike. O texto de produto usa foreground. */
+  --color-text-fallback: #f5f1eb;
+}
+
+@utility page-container {
+  width: 100%;
+  max-width: 1440px;
+  margin-inline: auto;
 }
 
 body {
   margin: 0;
-  background-color: var(--color-ink);
-  color: var(--color-text-fallback);
+  background-color: var(--color-background);
+  color: var(--color-foreground);
   color-scheme: dark;
-  font-family: sans-serif;
+  font-family: var(--font-sans);
+  -webkit-tap-highlight-color: transparent;
 }
 
-a {
-  color: inherit;
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@layer base {
+  a {
+    color: inherit;
+  }
+}
+
+button:not(:disabled),
+[role='button']:not(:disabled) {
+  cursor: pointer;
 }
 
 :focus-visible {
-  outline: auto;
+  outline: 2px solid var(--color-ring);
+  outline-offset: 2px;
 }
 
 .skeleton {
@@ -52,5 +94,12 @@ a {
 @media (prefers-reduced-motion: reduce) {
   .skeleton {
     animation: none;
+  }
+
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
   }
 }

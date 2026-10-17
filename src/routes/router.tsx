@@ -21,6 +21,7 @@ import { RegisterPage } from '../features/auth/register-page.tsx'
 import { SessionUnavailablePage } from '../features/auth/session-unavailable.tsx'
 import { FoundationPage } from '../features/foundation/foundation-page.tsx'
 import { NftDetailPage } from '../features/nft/nft-detail-page.tsx'
+import { UnavailablePage } from '../features/home/unavailable-page.tsx'
 import { UnknownRoutePage } from '../features/nft/unknown-route-page.tsx'
 import { ProfilePage } from '../features/profile/profile-page.tsx'
 import { SpikePage } from '../features/spike/spike-page.tsx'
@@ -111,7 +112,9 @@ const walletsRoute = createRoute({
 })
 
 function parseCheckoutSearch(search: Record<string, unknown>) {
-  return { step: search.step === 'revisao' ? ('revisao' as const) : ('dados' as const) }
+  return {
+    step: search.step === 'revisao' ? ('revisao' as const) : ('dados' as const),
+  }
 }
 
 const cartRoute = createRoute({
@@ -168,6 +171,22 @@ const foundationRoute = createRoute({
   component: FoundationPage,
 })
 
+const creatorsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/criadores',
+  component: function CreatorsRoute() {
+    return <UnavailablePage title="Criadores" />
+  },
+})
+
+const learnRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/aprenda',
+  component: function LearnRoute() {
+    return <UnavailablePage title="Aprenda" />
+  },
+})
+
 const unknownRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '$',
@@ -188,6 +207,8 @@ const routeTree = rootRoute.addChildren([
   orderDetailRoute,
   spikeRoute,
   foundationRoute,
+  creatorsRoute,
+  learnRoute,
   unknownRoute,
 ])
 

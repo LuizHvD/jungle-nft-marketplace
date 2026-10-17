@@ -1,8 +1,7 @@
 import { useNavigate, useRouterState, useSearch } from '@tanstack/react-router'
+import { SlidersHorizontal } from 'lucide-react'
 import type { FormEvent } from 'react'
 
-import { Button } from '@/components/ui/button.tsx'
-import { ProvisionalIcon } from '@/components/layout/provisional-icon.tsx'
 import { useCatalogChrome } from '@/features/catalog/catalog-chrome.tsx'
 
 function queryText(value: string): string | undefined {
@@ -22,7 +21,6 @@ export function MobileSearch() {
   const current = useSearch({ strict: false })
   const { filtersOpen, toggleFilters, draftQuery, setDraftQuery } =
     useCatalogChrome()
-
   const urlQuery =
     onCatalog && 'q' in current && typeof current.q === 'string'
       ? current.q
@@ -57,33 +55,35 @@ export function MobileSearch() {
     }
     const q = queryText(value)
     if (q) {
-      void navigate({ to: '/', search: { q } })
+      void navigate({ to: '/', search: { q }, hash: 'mercado' })
     }
   }
 
   return (
-    <form
-      onSubmit={submit}
-      className="flex w-full max-w-[366px] items-center gap-[8px]"
-    >
+    <form onSubmit={submit} className="flex w-full items-center gap-2">
+      <label className="sr-only" htmlFor="catalog-search">
+        Busca
+      </label>
       <input
         id="catalog-search"
         type="search"
+        role="searchbox"
         aria-label="Busca"
+        placeholder="Explorar coleções"
         value={value}
         onChange={(event) => changeQuery(event.target.value)}
-        className="h-[45px] min-w-0 flex-1 rounded-[10px] border-0 bg-surface-card pt-[12px] pr-[129px] pb-[12px] pl-[12px] text-inherit"
+        className="h-[45px] min-w-0 flex-1 rounded-[10px] border-0 bg-surface px-3 text-inherit placeholder:text-subtle-foreground"
       />
-      <Button
-        variant="primary"
+      <button
+        type="button"
         aria-label="Filtros"
         aria-expanded={filtersOpen}
         aria-controls="catalog-filters"
-        className="size-[45px] shrink-0 rounded-[14px] p-[12px]"
+        className="flex size-[45px] shrink-0 items-center justify-center rounded-[14px] bg-primary bg-[linear-gradient(135deg,#885933,#c98449)] text-ink"
         onClick={toggleFilters}
       >
-        <ProvisionalIcon name="filter" className="size-full" />
-      </Button>
+        <SlidersHorizontal className="size-5" aria-hidden="true" />
+      </button>
     </form>
   )
 }

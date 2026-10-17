@@ -2,7 +2,9 @@ import { useQueries, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 
+import { NftPicture } from '@/components/ui/nft-picture.tsx'
 import { Skeleton } from '@/components/ui/skeleton.tsx'
+import { formatEth } from '@/lib/format-eth.ts'
 import { QuantityField } from '@/features/nft/quantity-field.tsx'
 import { nftQueryOptions } from '@/features/nft/use-nft.ts'
 import { CommerceStatus } from '@/features/commerce/status.tsx'
@@ -88,8 +90,8 @@ export function CartPage() {
   }
 
   return (
-    <main className="flex flex-col gap-[4px] min-[1440px]:gap-[96px]">
-      <h1>Carrinho</h1>
+    <main className="flex flex-col gap-4 py-6 pb-28 md:pb-10">
+      <h1 className="text-2xl font-bold">Carrinho de NFTs</h1>
       <CommerceStatus message={status || priceNotice} />
       {mergeFailed ? (
         <button type="button" onClick={() => void retryMerge()}>
@@ -121,12 +123,30 @@ export function CartPage() {
           )
           const supply = edition?.availableSupply ?? item.quantity
           return (
-            <li key={item.id} data-testid={`cart-line-${item.editionId}`}>
-              <p>{nft?.name ?? item.nftId}</p>
-              <p>{item.editionId}</p>
-              <p data-testid={`line-total-${item.editionId}`}>
-                {item.lineTotal}
-              </p>
+            <li
+              key={item.id}
+              data-testid={`cart-line-${item.editionId}`}
+              className="grid grid-cols-[72px_minmax(0,1fr)] items-center gap-3 rounded-xl bg-surface p-3"
+            >
+              <NftPicture
+                nftId={item.nftId}
+                alt=""
+                loading="lazy"
+                sizes="72px"
+                className="rounded-lg"
+              />
+              <div className="flex min-w-0 flex-col gap-2">
+                <p className="font-semibold">{nft?.name ?? item.nftId}</p>
+                <p className="text-xs text-muted-foreground">{item.editionId}</p>
+                <p className="font-bold text-brand">
+                  {formatEth(item.lineTotal)}
+                  <span
+                    className="sr-only"
+                    data-testid={`line-total-${item.editionId}`}
+                  >
+                    {item.lineTotal}
+                  </span>
+                </p>
               <QuantityField
                 supply={supply}
                 quantity={item.quantity}
@@ -163,6 +183,7 @@ export function CartPage() {
               >
                 Remover
               </button>
+              </div>
             </li>
           )
         })}
@@ -220,6 +241,7 @@ export function CartPage() {
         <button
           type="button"
           disabled={busy}
+          className="h-12 w-full rounded-full bg-primary text-base font-semibold text-ink hover:bg-primary/85 disabled:cursor-not-allowed md:w-auto md:px-8"
           onClick={() => {
             if (userId) {
               void navigate({ to: '/checkout', search: { step: 'dados' } })
@@ -228,7 +250,7 @@ export function CartPage() {
             void navigate({ to: '/login', search: { returnTo: '/checkout' } })
           }}
         >
-          Checkout Button
+          Conectar e finalizar
         </button>
       ) : null}
     </main>

@@ -68,8 +68,8 @@ export function OrderDetailPage({ orderId }: OrderDetailPageProps) {
   const confirmed = current.status === 'confirmed'
 
   return (
-    <main className="flex flex-col gap-[4px] px-0 min-[1440px]:gap-[96px]">
-      <h1>Pedido</h1>
+    <main className="flex flex-col items-center gap-6 py-8">
+      <h1 className="text-2xl font-bold">Pedido</h1>
       <p data-testid="order-id">{current.id}</p>
       <p data-testid="order-status" aria-live="polite">
         {current.status}
@@ -78,6 +78,7 @@ export function OrderDetailPage({ orderId }: OrderDetailPageProps) {
         <section
           aria-label="Order Confirmation Modal"
           data-testid="order-receipt"
+          className="w-full max-w-[578px] rounded-t-md border-b-[10px] border-primary bg-surface p-6"
         >
           <h2>Recibo</h2>
           <p>Transação {current.id}</p>
