@@ -8,10 +8,13 @@ import { addDecimals, sameDecimal } from './money-display.ts'
 import { mergeGuestCart } from './merge-guest-cart.ts'
 import {
   markOrderAttemptPosted,
+  pendingOrderRetry,
   prepareOrderAttempt,
   readOrderAttempt,
   releaseUnconsumedAttempt,
+  rememberOrderAttempt,
 } from './order-attempt.ts'
+import { confirmAllowed } from './quote-guard.ts'
 import { appendOrderId, readOrderIndex } from './order-index.ts'
 import { commitOwnedCart, commitOwnedFavorites } from './owned.ts'
 import { peekGuestId, readGuestId } from './guest-id.ts'
@@ -132,6 +135,45 @@ describe('compra', () => {
     expect(readOrderIndex('user-bia')).toEqual(['order-bia'])
     releaseUnconsumedAttempt('user-bia')
     expect(readOrderAttempt('user-ada')).not.toBeNull()
+  })
+
+  it('só confirma com cotação definitiva ainda não recusada', () => {
+    const base = {
+      step: 'revisao' as const,
+      definitive: true,
+      connected: true,
+      fetching: false,
+      quoteId: 'quote-nova',
+      rejectedQuoteId: null,
+      pendingAttempt: false,
+    }
+    expect(confirmAllowed(base)).toBe(true)
+    expect(confirmAllowed({ ...base, step: 'dados' })).toBe(false)
+    expect(confirmAllowed({ ...base, definitive: false })).toBe(false)
+    expect(confirmAllowed({ ...base, connected: false })).toBe(false)
+    expect(confirmAllowed({ ...base, fetching: true })).toBe(false)
+    expect(confirmAllowed({ ...base, pendingAttempt: true })).toBe(false)
+    expect(confirmAllowed({ ...base, rejectedQuoteId: 'quote-nova' })).toBe(false)
+    expect(confirmAllowed({ ...base, rejectedQuoteId: 'quote-velha' })).toBe(true)
+    expect(confirmAllowed.toString()).not.toContain('Date.now')
+  })
+
+  it('o retry manual devolve a mesma chave e o mesmo payload', () => {
+    setCommerceStores({ local: memoryStore() })
+    const prepared = prepareOrderAttempt({
+      userId: 'user-ada',
+      quoteId: 'quote-1',
+      expectedTotal: '1.502000000000000000',
+    })
+    expect(pendingOrderRetry('user-ada')).toBeNull()
+    markOrderAttemptPosted('user-ada')
+    expect(pendingOrderRetry('user-ada')).toEqual({
+      key: prepared.blocked ? '' : prepared.attempt.key,
+      quoteId: 'quote-1',
+      expectedTotal: '1.502000000000000000',
+    })
+    rememberOrderAttempt('user-ada', 'order-1')
+    expect(pendingOrderRetry('user-ada')).toBeNull()
   })
 
   it('não grava carrinho nem favorito de outro ator', () => {

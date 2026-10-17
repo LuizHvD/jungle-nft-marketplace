@@ -22,7 +22,8 @@ export function useQuote(
   return useQuery({
     queryKey: ['quote', actorId, signature],
     enabled: Boolean(input && input.items.length > 0),
-    staleTime: Infinity,
+    staleTime: 0,
+    refetchOnMount: 'always',
     retry: false,
     queryFn: async ({ signal }) => {
       if (!input) {

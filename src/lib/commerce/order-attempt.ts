@@ -39,6 +39,22 @@ function writeMap(map: AttemptMap): void {
   commerceLocal().setItem(orderAttemptKey, JSON.stringify(map))
 }
 
+export function pendingOrderRetry(userId: string): {
+  key: string
+  quoteId: string
+  expectedTotal: string
+} | null {
+  const attempt = readOrderAttempt(userId)
+  if (!attempt?.posted || attempt.orderId) {
+    return null
+  }
+  return {
+    key: attempt.key,
+    quoteId: attempt.quoteId,
+    expectedTotal: attempt.expectedTotal,
+  }
+}
+
 export function readOrderAttempt(userId: string): OrderAttempt | null {
   const attempt = readMap()[userId]
   if (!attempt || attempt.userId !== userId) {

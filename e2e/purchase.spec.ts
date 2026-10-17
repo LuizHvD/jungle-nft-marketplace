@@ -3,6 +3,7 @@ import { expect, type Page, test } from '@playwright/test'
 import {
   adaEmail,
   adaPassword,
+  advanceClock,
   biaEmail,
   biaPassword,
   login,
@@ -31,6 +32,30 @@ async function reviewCheckout(page: Page) {
   await expect(page.getByRole('button', { name: 'Confirm Button' })).toHaveCount(0)
   await page.getByRole('button', { name: 'Continuar' }).click()
   await expect(page.getByTestId('quote-definitive')).toHaveText('Cotação definitiva')
+  await expect(page.getByTestId('quote-state')).toHaveText('ready')
+}
+
+function watchQuotes(page: Page) {
+  const quotes: { quoteId: string; expiresAt: string; total: string; definitive: boolean }[] = []
+  page.on('response', (response) => {
+    const url = new URL(response.url())
+    if (!response.ok() || response.request().method() !== 'POST' || url.pathname !== '/api/quotes') {
+      return
+    }
+    void response.json().then(
+      (body: { quoteId?: string; expiresAt?: string; total?: string; definitive?: boolean }) => {
+        if (body.quoteId && body.expiresAt && body.total && typeof body.definitive === 'boolean') {
+          quotes.push({
+            quoteId: body.quoteId,
+            expiresAt: body.expiresAt,
+            total: body.total,
+            definitive: body.definitive,
+          })
+        }
+      },
+    )
+  })
+  return quotes
 }
 
 test.beforeEach(async ({ page }) => {
@@ -154,7 +179,63 @@ test('carteira desconectada impede o envio', async ({ page }) => {
   await expect(page.getByRole('button', { name: 'Confirm Button' })).toBeVisible()
 })
 
-test('timeout, refresh e conflito reutilizam a mesma chave', async ({ page }) => {
+test('voltar ao checkout e mudar a quantidade geram outra cotação', async ({ page }) => {
+  const quotes = watchQuotes(page)
+  const definitive = () => quotes.filter((item) => item.definitive)
+  await login(page, adaEmail, adaPassword)
+  await reviewCheckout(page)
+  await expect.poll(() => definitive().length).toBe(1)
+  const first = definitive()[0]
+  if (!first) {
+    throw new Error('cotação ausente')
+  }
+  await openCart(page)
+  await page.goto('/checkout?step=revisao')
+  await expect.poll(() => definitive().length).toBe(2)
+  await expect(page.getByTestId('quote-id')).not.toHaveText(first.quoteId)
+  await expect(page.getByTestId('quote-state')).toHaveText('ready')
+  const second = definitive()[1]
+  if (!second) {
+    throw new Error('segunda cotação ausente')
+  }
+  await openCart(page)
+  await page.getByRole('button', { name: 'Aumentar quantidade' }).click()
+  await expect(page.getByRole('textbox', { name: 'Quantidade' })).toHaveValue('2')
+  await page.goto('/checkout?step=revisao')
+  await expect.poll(() => definitive().at(-1)?.total).not.toBe(second.total)
+  await expect(page.getByTestId('quote-state')).toHaveText('ready')
+})
+
+test('cotação vencida no relógio do mock bloqueia a confirmação até a recotação', async ({
+  page,
+}) => {
+  const quotes = watchQuotes(page)
+  const definitive = () => quotes.filter((item) => item.definitive)
+  await login(page, adaEmail, adaPassword)
+  await reviewCheckout(page)
+  await expect.poll(() => definitive().length).toBe(1)
+  const current = definitive()[0]
+  if (!current) {
+    throw new Error('cotação ausente')
+  }
+  await advanceClock(page, current.expiresAt)
+  await page.getByRole('button', { name: 'Confirm Button' }).click()
+  await expect(page.getByTestId('commerce-status')).toHaveText('A cotação expirou.')
+  await expect.poll(async () => {
+    const id = await page.getByTestId('quote-id').innerText()
+    const state = await page.getByTestId('quote-state').innerText()
+    if (id === current.quoteId && state === 'ready') {
+      return 'stale-ready'
+    }
+    if (id !== current.quoteId && state === 'ready') {
+      return 'fresh-ready'
+    }
+    return 'blocked'
+  }).toBe('fresh-ready')
+  expect(definitive().length).toBeGreaterThan(1)
+})
+
+test('timeout, refresh sem POST e retry manual usam a mesma chave', async ({ page }) => {
   await login(page, adaEmail, adaPassword)
   await reviewCheckout(page)
   await setScenario(page, 'timeout')
@@ -169,34 +250,50 @@ test('timeout, refresh e conflito reutilizam a mesma chave', async ({ page }) =>
     }
     const map = JSON.parse(localStorage.getItem('jungle.order-attempt') ?? '{}') as Record<
       string,
-      { key: string; expectedTotal: string }
+      { key: string; quoteId: string; expectedTotal: string }
     >
     const userId = session.user?.id ?? ''
-    return { userId, key: map[userId]?.key ?? '', total: map[userId]?.expectedTotal ?? '' }
+    const stored = map[userId]
+    return {
+      userId,
+      key: stored?.key ?? '',
+      quoteId: stored?.quoteId ?? '',
+      total: stored?.expectedTotal ?? '',
+    }
+  })
+  const posts: string[] = []
+  page.on('request', (request) => {
+    const url = new URL(request.url())
+    if (request.method() === 'POST' && url.pathname === '/api/orders') {
+      posts.push(request.headers()['idempotency-key'] ?? '')
+    }
   })
   await page.reload()
-  await expect(page).toHaveURL(/\/pedidos\//)
+  await expect(page).toHaveURL(/\/checkout/)
+  await expect(page.getByTestId('pending-attempt')).toBeVisible()
+  await expect(page.getByTestId('pending-key')).toHaveText(key.key)
+  await expect(page.getByTestId('pending-quote')).toHaveText(key.quoteId)
+  await expect(page.getByTestId('pending-total')).toHaveText(key.total)
+  await expect(page.getByRole('button', { name: 'Confirm Button' })).toHaveCount(0)
+  expect(posts).toEqual([])
+  await page.getByRole('button', { name: 'Tentar de novo' }).click()
   await expect(page.getByTestId('order-status')).toHaveText('pending')
+  expect(posts).toEqual([key.key])
   const orderId = await page.getByTestId('order-id').innerText()
   const replay = await page.evaluate(async (attempt) => {
     const session = JSON.parse(localStorage.getItem('jungle.session') ?? '{}') as {
       token?: string
     }
-    const map = JSON.parse(localStorage.getItem('jungle.order-attempt') ?? '{}') as Record<
-      string,
-      { key: string; quoteId: string; expectedTotal: string }
-    >
-    const stored = map[attempt.userId]
     const same = await fetch('/api/orders', {
       method: 'POST',
       headers: {
         authorization: `Bearer ${session.token ?? ''}`,
         'content-type': 'application/json',
-        'idempotency-key': stored?.key ?? '',
+        'idempotency-key': attempt.key,
       },
       body: JSON.stringify({
-        quoteId: stored?.quoteId,
-        expectedTotal: stored?.expectedTotal,
+        quoteId: attempt.quoteId,
+        expectedTotal: attempt.total,
       }),
     })
     const conflict = await fetch('/api/orders', {
@@ -204,20 +301,18 @@ test('timeout, refresh e conflito reutilizam a mesma chave', async ({ page }) =>
       headers: {
         authorization: `Bearer ${session.token ?? ''}`,
         'content-type': 'application/json',
-        'idempotency-key': stored?.key ?? '',
+        'idempotency-key': attempt.key,
       },
       body: JSON.stringify({
-        quoteId: stored?.quoteId,
+        quoteId: attempt.quoteId,
         expectedTotal: '9.000000000000000000',
       }),
     })
     return {
-      key: stored?.key ?? '',
       sameId: ((await same.json()) as { id?: string }).id ?? '',
       conflict: conflict.status,
     }
   }, key)
-  expect(replay.key).toBe(key.key)
   expect(replay.sameId).toBe(orderId)
   expect(replay.conflict).toBe(409)
 })

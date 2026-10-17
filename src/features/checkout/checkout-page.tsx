@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useSearch } from '@tanstack/react-router'
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 
 import { walletSchema } from '@/contracts/wallets.ts'
 import { Skeleton } from '@/components/ui/skeleton.tsx'
@@ -16,7 +16,8 @@ import {
   type CheckoutNetwork,
   type CheckoutStep,
 } from '@/lib/commerce/checkout-draft.ts'
-import { prepareOrderAttempt, readOrderAttempt } from '@/lib/commerce/order-attempt.ts'
+import { pendingOrderRetry, prepareOrderAttempt } from '@/lib/commerce/order-attempt.ts'
+import { confirmAllowed } from '@/lib/commerce/quote-guard.ts'
 import { http } from '@/lib/http/client.ts'
 import { apiErrorCode, apiErrorMessage, isAbortError } from '@/lib/http/error.ts'
 import { commitOwnedWallet, readActorStamp } from '@/lib/session/owned-cache.ts'
@@ -40,7 +41,7 @@ export function CheckoutPage() {
   const [walletId, setWalletId] = useState(draft?.walletId ?? '')
   const [network, setNetwork] = useState<CheckoutNetwork>(draft?.network ?? 'demo-mainnet')
   const [notice, setNotice] = useState('')
-  const resumeStarted = useRef(false)
+  const [rejectedQuoteId, setRejectedQuoteId] = useState<string | null>(null)
   const list = wallets.data?.wallets ?? []
   const resolvedWalletId = walletId || list[0]?.id || ''
   const wallet = list.find((item) => item.id === resolvedWalletId) ?? null
@@ -66,20 +67,16 @@ export function CheckoutPage() {
   const connected =
     wallet?.connection.status === 'connected' &&
     wallet.connection.network === network
-  const canConfirm = Boolean(step === 'revisao' && quote?.definitive && connected)
-
-  useEffect(() => {
-    if (!userId || resumeStarted.current) {
-      return
-    }
-    resumeStarted.current = true
-    const attempt = readOrderAttempt(userId)
-    const stored = storedPlaceInput(userId)
-    if (!stored || !attempt?.posted || attempt.orderId) {
-      return
-    }
-    void place.mutateAsync(stored).catch(() => undefined)
-  }, [place, userId])
+  const pending = userId ? pendingOrderRetry(userId) : null
+  const canConfirm = confirmAllowed({
+    step,
+    definitive: quote?.definitive === true,
+    connected,
+    fetching: finalQuote.isFetching || finalQuote.isPending,
+    quoteId: quote?.quoteId ?? null,
+    rejectedQuoteId,
+    pendingAttempt: Boolean(pending),
+  })
 
   function persist(nextStep: CheckoutStep, nextWallet: string, nextNetwork: CheckoutNetwork) {
     if (!userId) {
@@ -121,15 +118,18 @@ export function CheckoutPage() {
     setNotice('')
     try {
       await place.mutateAsync({ userId, ...input })
-    } catch {
+    } catch (error) {
+      if (apiErrorCode(error) === 'QUOTE_STALE') {
+        if (quote?.quoteId) {
+          setRejectedQuoteId(quote.quoteId)
+        }
+        void client.invalidateQueries({ queryKey: ['quote', actorId] })
+      }
       setNotice('')
     }
   }
 
-  const retryable =
-    notice === 'Retome a tentativa anterior.' ||
-    (place.isError &&
-      (isAbortError(place.error) || apiErrorCode(place.error) === 'IDEMPOTENCY_CONFLICT'))
+  const retryable = Boolean(pending) || notice === 'Retome a tentativa anterior.'
   const status = place.isError
     ? isAbortError(place.error)
       ? 'A resposta não chegou. Tentar de novo.'
@@ -140,7 +140,17 @@ export function CheckoutPage() {
     <main className="flex flex-col gap-[4px] min-[1440px]:gap-[96px]">
       <h1>Checkout</h1>
       <p data-testid="checkout-step">{step}</p>
+      <p data-testid="quote-state">{canConfirm ? 'ready' : 'blocked'}</p>
+      <p data-testid="quote-id">{quote?.quoteId ?? ''}</p>
       <CommerceStatus message={status} />
+      {pending ? (
+        <section data-testid="pending-attempt">
+          <p>Tentativa pendente</p>
+          <p data-testid="pending-key">{pending.key}</p>
+          <p data-testid="pending-quote">{pending.quoteId}</p>
+          <p data-testid="pending-total">{pending.expectedTotal}</p>
+        </section>
+      ) : null}
       {wallets.isPending || cart.isPending ? (
         <Skeleton data-testid="checkout-skeleton" className="h-[45px] w-full" />
       ) : null}
