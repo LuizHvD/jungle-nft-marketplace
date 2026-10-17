@@ -51,5 +51,14 @@ export default tseslint.config(
       ],
     },
   },
+  {
+    files: ['scripts/**/*.mjs'],
+    languageOptions: {
+      globals: {
+        fetch: 'readonly',
+        process: 'readonly',
+      },
+    },
+  },
   prettier,
 )

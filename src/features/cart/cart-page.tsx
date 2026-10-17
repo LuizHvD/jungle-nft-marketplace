@@ -100,9 +100,17 @@ export function CartPage() {
         <Skeleton data-testid="cart-skeleton" className="h-[45px] w-full" />
       ) : null}
       {cart.isError ? (
-        <p>
-          {apiErrorMessage(cart.error, 'Não foi possível carregar o carrinho.')}
-        </p>
+        <div>
+          <p>
+            {apiErrorMessage(
+              cart.error,
+              'Não foi possível carregar o carrinho.',
+            )}
+          </p>
+          <button type="button" onClick={() => void cart.refetch()}>
+            Tentar de novo
+          </button>
+        </div>
       ) : null}
       {cart.isSuccess && items.length === 0 ? <p>Carrinho vazio</p> : null}
       <ul className="flex flex-col gap-[8px]">
@@ -188,6 +196,12 @@ export function CartPage() {
           Remover cupom
         </button>
       </form>
+      {items.length > 0 && !quote && !quoteError ? (
+        <Skeleton
+          data-testid="cart-summary-skeleton"
+          className="h-[45px] w-full"
+        />
+      ) : null}
       {quoteError ? (
         <p role="alert">
           {apiErrorMessage(quoteError, 'Cotação indisponível.')}
