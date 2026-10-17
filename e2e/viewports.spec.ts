@@ -45,7 +45,9 @@ for (const viewport of viewports) {
     await expectNoHorizontalOverflow(page)
 
     await page.goto('/checkout')
-    await expect(page.getByRole('heading', { name: 'Checkout' })).toBeVisible()
+    await expect(
+      page.getByRole('heading', { name: 'Pagamento com carteira' }),
+    ).toBeVisible()
     await expectNoHorizontalOverflow(page)
 
     await page.goto('/pedidos/order-ada-1')
@@ -53,11 +55,18 @@ for (const viewport of viewports) {
     await expectNoHorizontalOverflow(page)
 
     await page.goto('/perfil')
-    await expect(page.getByRole('heading', { name: 'Perfil' })).toBeVisible()
+    await expect(
+      page.getByRole('heading', {
+        name: 'Perfil do colecionador',
+        exact: true,
+      }),
+    ).toBeVisible()
     await expectNoHorizontalOverflow(page)
 
     await page.goto('/carteiras')
-    await expect(page.getByRole('heading', { name: 'Carteiras' })).toBeVisible()
+    await expect(
+      page.getByRole('heading', { name: 'Carteiras', exact: true }),
+    ).toBeVisible()
     await expectNoHorizontalOverflow(page)
   })
 }

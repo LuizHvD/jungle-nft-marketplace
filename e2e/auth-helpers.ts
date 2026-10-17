@@ -34,13 +34,14 @@ export async function resetDemo(page: Page) {
 }
 
 export async function submitLogin(page: Page, email: string, password: string) {
-  await page.getByLabel('E-mail').fill(email)
-  await page.getByLabel('Senha').fill(password)
+  await page.getByLabel('E-mail', { exact: true }).fill(email)
+  await page.getByLabel('Senha', { exact: true }).fill(password)
   const response = page.waitForResponse(
     (res) =>
-      res.url().includes('/api/auth/login') && res.request().method() === 'POST',
+      res.url().includes('/api/auth/login') &&
+      res.request().method() === 'POST',
   )
-  await page.getByRole('button', { name: 'Sign In Button' }).click()
+  await page.getByRole('button', { name: 'Entrar' }).click()
   expect((await response).ok()).toBeTruthy()
   await expect(page).not.toHaveURL(/\/login/)
 }

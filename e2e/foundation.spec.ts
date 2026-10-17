@@ -27,7 +27,7 @@ async function expectTabReachesNavigation(page: Page) {
   const nav = page.getByRole('navigation')
   await expect(nav).toBeVisible()
 
-  for (let step = 0; step < 12; step += 1) {
+  for (let step = 0; step < 40; step += 1) {
     await page.keyboard.press('Tab')
     const focusedInNav = await nav.evaluate((element) =>
       element.contains(document.activeElement),
@@ -128,10 +128,8 @@ test('texto e controles permanecem legíveis', async ({ page }) => {
   await expect(filter.locator('svg')).toBeVisible()
   expect(await contrastRatio(filter)).toBeGreaterThanOrEqual(4.5)
 
-  for (const name of ['Home', 'Shop', 'User']) {
-    await expect(
-      page.getByRole('button', { name }).locator('svg'),
-    ).toBeVisible()
+  for (const name of ['Início', 'Favoritos', 'Perfil']) {
+    await expect(page.getByRole('link', { name }).locator('svg')).toBeVisible()
   }
 
   await page.setViewportSize({ width: 1440, height: 900 })
@@ -142,12 +140,15 @@ test('texto e controles permanecem legíveis', async ({ page }) => {
 
   const footer = page.getByTestId('site-footer')
   await expect(footer).toBeVisible()
-  await expect(footer.getByText('KURIO')).toBeVisible()
+  await expect(footer.getByText('KURIO', { exact: true })).toBeVisible()
   await expect(footer.getByText('Newsletter')).toBeVisible()
-  await expect(footer.getByRole('img', { name: 'Medalhão 1' })).toBeVisible()
-  await expect(footer.getByRole('button', { name: 'Link 1' })).toBeVisible()
-  await expect(footer.getByRole('button', { name: 'Social' })).toBeVisible()
-  await expect(footer.getByRole('button', { name: 'Carteira' })).toBeVisible()
+  await expect(footer.getByText('Segurança da carteira')).toBeVisible()
+  await expect(
+    footer.getByRole('button', { name: 'Central de ajuda' }),
+  ).toBeVisible()
+  await expect(
+    footer.getByRole('button', { name: 'Kurio no Instagram' }),
+  ).toBeVisible()
 })
 
 test('tab bar fica no fim da página curta e segue o conteúdo longo', async ({
@@ -156,7 +157,7 @@ test('tab bar fica no fim da página curta e segue o conteúdo longo', async ({
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/fundacao')
 
-  const nav = page.getByRole('navigation', { name: 'Tab Bar' })
+  const nav = page.getByRole('navigation', { name: 'Navegação inferior' })
   const shortBox = await nav.boundingBox()
   expect(shortBox).toBeTruthy()
   if (shortBox) {
@@ -169,15 +170,13 @@ test('tab bar fica no fim da página curta e segue o conteúdo longo', async ({
   })
 
   const longBox = await nav.boundingBox()
-  const mainBox = await page.locator('main').boundingBox()
   expect(longBox).toBeTruthy()
-  expect(mainBox).toBeTruthy()
-  if (longBox && mainBox) {
-    expect(longBox.y).toBeGreaterThanOrEqual(mainBox.y + mainBox.height - 1)
-    expect(longBox.y).toBeGreaterThan(844)
+  if (longBox) {
+    expect(longBox.y + longBox.height).toBeGreaterThanOrEqual(844 - 2)
+    expect(longBox.y + longBox.height).toBeLessThanOrEqual(844 + 1)
   }
 
-  await expect(nav).toHaveCSS('position', 'relative')
+  await expect(nav).toHaveCSS('position', 'fixed')
 })
 
 test('skeleton respeita prefers-reduced-motion', async ({ page }) => {

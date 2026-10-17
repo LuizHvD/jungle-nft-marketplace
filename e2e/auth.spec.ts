@@ -23,24 +23,33 @@ async function logout(page: Page) {
 for (const viewport of flowViewports) {
   test.describe(`conta ${viewport.width}`, () => {
     test.beforeEach(async ({ page }) => {
-      await page.setViewportSize({ width: viewport.width, height: viewport.height })
+      await page.setViewportSize({
+        width: viewport.width,
+        height: viewport.height,
+      })
       await resetDemo(page)
     })
 
-    test('cadastro, conflito, login inválido, returnTo e refresh', async ({ page }) => {
+    test('cadastro, conflito, login inválido, returnTo e refresh', async ({
+      page,
+    }) => {
       await page.goto('/cadastro')
       await page.getByLabel('Nome').fill('Ada')
       await page.getByLabel('E-mail').fill(adaEmail)
       await page.getByLabel('Senha').fill(adaPassword)
       const conflict = page.waitForResponse(
         (res) =>
-          res.url().includes('/api/auth/register') && res.request().method() === 'POST',
+          res.url().includes('/api/auth/register') &&
+          res.request().method() === 'POST',
       )
-      await page.getByRole('button', { name: 'Create Profile Button' }).click()
+      await page.getByRole('button', { name: 'Criar perfil' }).click()
       expect((await conflict).status()).toBe(409)
       await expect(page).toHaveURL(/\/cadastro/)
       await expect(page.getByText('E-mail já cadastrado.')).toBeVisible()
-      await expect(page.getByLabel('E-mail')).toHaveAttribute('aria-invalid', 'true')
+      await expect(page.getByLabel('E-mail')).toHaveAttribute(
+        'aria-invalid',
+        'true',
+      )
 
       await page.getByLabel('Nome').fill('Nova')
       await page.getByLabel('E-mail').fill('nova@demo.jungle')
@@ -56,9 +65,10 @@ for (const viewport of flowViewports) {
       })
       const created = page.waitForResponse(
         (res) =>
-          res.url().includes('/api/auth/register') && res.request().method() === 'POST',
+          res.url().includes('/api/auth/register') &&
+          res.request().method() === 'POST',
       )
-      await page.getByRole('button', { name: 'Create Profile Button' }).click()
+      await page.getByRole('button', { name: 'Criar perfil' }).click()
       expect((await created).ok()).toBeTruthy()
       expect(registers).toBe(1)
       await expect(page.getByRole('link', { name: 'Nova' })).toBeVisible()
@@ -69,9 +79,10 @@ for (const viewport of flowViewports) {
       await page.getByLabel('Senha').fill('errada-12')
       const denied = page.waitForResponse(
         (res) =>
-          res.url().includes('/api/auth/login') && res.request().method() === 'POST',
+          res.url().includes('/api/auth/login') &&
+          res.request().method() === 'POST',
       )
-      await page.getByRole('button', { name: 'Sign In Button' }).click()
+      await page.getByRole('button', { name: 'Entrar' }).click()
       expect((await denied).status()).toBe(401)
       await expect(page).toHaveURL(/\/login/)
       await expect(page.getByRole('alert')).toBeVisible()
@@ -79,20 +90,21 @@ for (const viewport of flowViewports) {
       await page.goto('/login?returnTo=/nfts/nft-aurora')
       await page.getByLabel('E-mail').fill(adaEmail)
       await page.getByLabel('Senha').fill(adaPassword)
-      await page.getByRole('button', { name: 'Sign In Button' }).click()
+      await page.getByRole('button', { name: 'Entrar' }).click()
       await expect(page).toHaveURL(/\/nfts\/nft-aurora/)
 
       await logout(page)
       await page.goto('/login?returnTo=https://evil.test')
       await page.getByLabel('E-mail').fill(adaEmail)
       await page.getByLabel('Senha').fill(adaPassword)
-      await page.getByRole('button', { name: 'Sign In Button' }).click()
+      await page.getByRole('button', { name: 'Entrar' }).click()
       await expect(page).toHaveURL(/\/$/)
       expect(page.url()).not.toContain('evil')
 
       const sessionResponse = page.waitForResponse(
         (res) =>
-          res.url().includes('/api/auth/session') && res.request().method() === 'GET',
+          res.url().includes('/api/auth/session') &&
+          res.request().method() === 'GET',
       )
       await page.reload()
       expect((await sessionResponse).ok()).toBeTruthy()
@@ -108,7 +120,8 @@ for (const viewport of flowViewports) {
       await advanceClock(page, expiresAt)
       const expired = page.waitForResponse(
         (res) =>
-          res.url().includes('/api/auth/session') && res.request().method() === 'GET',
+          res.url().includes('/api/auth/session') &&
+          res.request().method() === 'GET',
       )
       await page.goto('/perfil')
       expect((await expired).status()).toBe(401)
@@ -149,7 +162,13 @@ for (const viewport of flowViewports) {
         await fetch('/api/demo/reset', { method: 'POST' })
         localStorage.removeItem('jungle.session')
       })
-      for (const path of ['/perfil', '/carteiras', '/checkout', '/favoritos', '/pedidos']) {
+      for (const path of [
+        '/perfil',
+        '/carteiras',
+        '/checkout',
+        '/favoritos',
+        '/pedidos',
+      ]) {
         await page.goto(path)
         await expect(page).toHaveURL(/\/login/)
         expect(decodeURIComponent(page.url())).toContain(path)
@@ -188,14 +207,22 @@ for (const viewport of flowViewports) {
   })
 }
 
-test('logout fecha o socket e o 401 atrasado não derruba a conta nova', async ({ page }) => {
+test('logout fecha o socket e o 401 atrasado não derruba a conta nova', async ({
+  page,
+}) => {
   await page.addInitScript(() => {
     const originalOpen = XMLHttpRequest.prototype.open
     const originalSend = XMLHttpRequest.prototype.send
     const originalAbort = XMLHttpRequest.prototype.abort
     const held: XMLHttpRequest[] = []
-    XMLHttpRequest.prototype.open = function (method: string, url: string | URL) {
-      const target = this as XMLHttpRequest & { __method?: string; __url?: string }
+    XMLHttpRequest.prototype.open = function (
+      method: string,
+      url: string | URL,
+    ) {
+      const target = this as XMLHttpRequest & {
+        __method?: string
+        __url?: string
+      }
       target.__method = String(method)
       target.__url = String(url)
       return originalOpen.call(this, method, url, true)
@@ -206,16 +233,27 @@ test('logout fecha o socket e o 401 atrasado não derruba a conta nova', async (
       }
       originalAbort.call(this)
     }
-    XMLHttpRequest.prototype.send = function (body?: Document | XMLHttpRequestBodyInit | null) {
-      const target = this as XMLHttpRequest & { __method?: string; __url?: string }
+    XMLHttpRequest.prototype.send = function (
+      body?: Document | XMLHttpRequestBodyInit | null,
+    ) {
+      const target = this as XMLHttpRequest & {
+        __method?: string
+        __url?: string
+      }
       const flag = sessionStorage.getItem('hold-profile') === '1'
-      if (flag && target.__method === 'GET' && (target.__url ?? '').includes('/api/profile')) {
+      if (
+        flag &&
+        target.__method === 'GET' &&
+        (target.__url ?? '').includes('/api/profile')
+      ) {
         held.push(this)
         return
       }
       originalSend.call(this, body ?? null)
     }
-    ;(window as Window & { __releaseProfileGet?: () => number }).__releaseProfileGet = () => {
+    ;(
+      window as Window & { __releaseProfileGet?: () => number }
+    ).__releaseProfileGet = () => {
       const xhr = held.shift()
       if (!xhr) {
         return 0
@@ -227,9 +265,11 @@ test('logout fecha o socket e o 401 atrasado não derruba a conta nova', async (
   await page.setViewportSize({ width: 1440, height: 900 })
   await resetDemo(page)
   await login(page, adaEmail, adaPassword)
-  await expect.poll(() =>
-    page.evaluate(() => document.documentElement.dataset.sessionSocket),
-  ).toBe('open')
+  await expect
+    .poll(() =>
+      page.evaluate(() => document.documentElement.dataset.sessionSocket),
+    )
+    .toBe('open')
   await page.evaluate(() => {
     sessionStorage.setItem('hold-profile', '1')
   })
@@ -237,15 +277,18 @@ test('logout fecha o socket e o 401 atrasado não derruba a conta nova', async (
   await expect(page.getByTestId('profile-skeleton')).toBeVisible()
   await page.getByRole('button', { name: 'Sair' }).click()
   await expect.poll(() => readSession(page)).toBeNull()
-  await expect.poll(() =>
-    page.evaluate(() => document.documentElement.dataset.sessionSocket),
-  ).toBe('closed')
-  await page.getByRole('link', { name: 'Login' }).click()
+  await expect
+    .poll(() =>
+      page.evaluate(() => document.documentElement.dataset.sessionSocket),
+    )
+    .toBe('closed')
+  await page.getByRole('link', { name: 'Entrar' }).click()
   await submitLogin(page, biaEmail, biaPassword)
   await expect(page.getByRole('link', { name: 'Bia Demo' })).toBeVisible()
   const lateProfile = page.waitForResponse(
     (response) =>
-      response.url().includes('/api/profile') && response.request().method() === 'GET',
+      response.url().includes('/api/profile') &&
+      response.request().method() === 'GET',
   )
   const released = await page.evaluate(() => {
     sessionStorage.removeItem('hold-profile')
@@ -278,7 +321,9 @@ test('falha ao validar a sessão bloqueia a rota privada e mantém o token', asy
     })
   })
   await page.goto('/perfil')
-  await expect(page.getByRole('alert')).toHaveText('Não foi possível validar a sessão.')
+  await expect(page.getByRole('alert')).toHaveText(
+    'Não foi possível validar a sessão.',
+  )
   await expect(page.getByLabel('Senha atual')).toHaveCount(0)
   await expect(page).not.toHaveURL(/\/login/)
   expect(await readSession(page)).toContain(adaEmail)

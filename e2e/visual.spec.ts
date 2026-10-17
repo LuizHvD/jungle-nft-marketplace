@@ -4,6 +4,7 @@ import { adaEmail, adaPassword, login, resetDemo } from './auth-helpers'
 
 const shots = [
   { width: 1440, height: 900, suffix: '1440' },
+  { width: 768, height: 1024, suffix: '768' },
   { width: 390, height: 844, suffix: '390' },
 ] as const
 

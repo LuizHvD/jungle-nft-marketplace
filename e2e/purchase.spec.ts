@@ -25,14 +25,14 @@ async function setScenario(page: Page, id: string) {
 }
 
 async function openCart(page: Page) {
-  await page.getByRole('link', { name: 'Cart' }).click()
+  await page.getByRole('link', { name: 'Carrinho' }).click()
   await expect(page.getByRole('heading', { name: 'Carrinho' })).toBeVisible()
 }
 
 async function reviewCheckout(page: Page) {
   await page.goto('/checkout')
   await expect(
-    page.getByRole('button', { name: 'Confirm Button' }),
+    page.getByRole('button', { name: 'Confirmar compra' }),
   ).toHaveCount(0)
   await page.getByRole('button', { name: 'Continuar' }).click()
   await expect(page.getByTestId('quote-definitive')).toHaveText(
@@ -111,7 +111,7 @@ test('visitante mantém o item e o login não duplica a linha', async ({
   page,
 }) => {
   await page.goto('/nfts/nft-aurora')
-  await page.getByRole('button', { name: 'Compra' }).click()
+  await page.getByRole('button', { name: 'Comprar NFT' }).click()
   await expect(page.getByTestId('commerce-status')).toHaveText(
     'Adicionado ao carrinho.',
   )
@@ -124,11 +124,11 @@ test('visitante mantém o item e o login não duplica a linha', async ({
   await expect(page.getByRole('textbox', { name: 'Quantidade' })).toHaveValue(
     '1',
   )
-  await page.getByRole('button', { name: 'Checkout Button' }).click()
+  await page.getByRole('button', { name: 'Conectar e finalizar' }).click()
   await expect(page).toHaveURL(/\/login/)
   await page.getByLabel('E-mail').fill(adaEmail)
   await page.getByLabel('Senha').fill(adaPassword)
-  await page.getByRole('button', { name: 'Sign In Button' }).click()
+  await page.getByRole('button', { name: 'Entrar' }).click()
   await expect(page).toHaveURL(/\/checkout/)
   await openCart(page)
   await expect(page.getByTestId('cart-line-edition-aurora-1')).toHaveCount(1)
@@ -139,7 +139,7 @@ test('visitante mantém o item e o login não duplica a linha', async ({
 
 test('cupom válido, inválido, expirado e removido', async ({ page }) => {
   await page.goto('/nfts/nft-moss')
-  await page.getByRole('button', { name: 'Compra' }).click()
+  await page.getByRole('button', { name: 'Comprar NFT' }).click()
   await openCart(page)
   await expect(page.getByTestId('money-discount')).toHaveText(
     '0.000000000000000000',
@@ -180,7 +180,7 @@ test('cupom válido, inválido, expirado e removido', async ({ page }) => {
 test('estoque insuficiente e edição esgotada', async ({ page }) => {
   await login(page, biaEmail, biaPassword)
   await page.goto('/nfts/nft-moss')
-  await page.getByRole('button', { name: 'Compra' }).click()
+  await page.getByRole('button', { name: 'Comprar NFT' }).click()
   await expect(page.getByTestId('commerce-status')).toHaveText(
     'Quantidade acima do estoque.',
   )
@@ -194,7 +194,7 @@ test('compra confirmada congela o recibo', async ({ page }) => {
   await reviewCheckout(page)
   const total = await page.getByTestId('money-total').innerText()
   await setScenario(page, 'payment-confirmed')
-  await page.getByRole('button', { name: 'Confirm Button' }).click()
+  await page.getByRole('button', { name: 'Confirmar compra' }).click()
   await expect(page.getByTestId('order-receipt')).toBeVisible()
   await expect(page.getByTestId('order-status')).toHaveText('confirmed')
   await expect(page.getByTestId('money-total')).toHaveText(total)
@@ -213,7 +213,7 @@ test('pagamento recusado preserva o carrinho', async ({ page }) => {
   await login(page, adaEmail, adaPassword)
   await reviewCheckout(page)
   await setScenario(page, 'payment-declined')
-  await page.getByRole('button', { name: 'Confirm Button' }).click()
+  await page.getByRole('button', { name: 'Confirmar compra' }).click()
   await expect(page.getByTestId('order-status')).toHaveText('declined')
   await expect(page.getByTestId('order-receipt')).toHaveCount(0)
   await expect(page.getByText('Recibo indisponível.')).toBeVisible()
@@ -227,7 +227,7 @@ test('carteira desconectada impede o envio', async ({ page }) => {
   await page.getByLabel('Rede').selectOption('demo-l2')
   await page.getByRole('button', { name: 'Continuar' }).click()
   await expect(
-    page.getByRole('button', { name: 'Confirm Button' }),
+    page.getByRole('button', { name: 'Confirmar compra' }),
   ).toHaveCount(0)
   await expect(page.getByRole('alert')).toHaveText(
     'Conexão da carteira inválida.',
@@ -235,7 +235,7 @@ test('carteira desconectada impede o envio', async ({ page }) => {
   await page.getByRole('button', { name: 'Conectar carteira' }).click()
   await expect(page.getByTestId('wallet-connection')).toContainText('connected')
   await expect(
-    page.getByRole('button', { name: 'Confirm Button' }),
+    page.getByRole('button', { name: 'Confirmar compra' }),
   ).toBeVisible()
 })
 
@@ -283,7 +283,7 @@ test('cotação vencida no relógio do mock bloqueia a confirmação até a reco
     throw new Error('cotação ausente')
   }
   await advanceClock(page, current.expiresAt)
-  await page.getByRole('button', { name: 'Confirm Button' }).click()
+  await page.getByRole('button', { name: 'Confirmar compra' }).click()
   await expect(page.getByTestId('commerce-status')).toHaveText(
     'A cotação expirou.',
   )
@@ -309,7 +309,7 @@ test('timeout, refresh sem POST e retry manual usam a mesma chave', async ({
   await login(page, adaEmail, adaPassword)
   await reviewCheckout(page)
   await setScenario(page, 'timeout')
-  await page.getByRole('button', { name: 'Confirm Button' }).click()
+  await page.getByRole('button', { name: 'Confirmar compra' }).click()
   await expect(page.getByTestId('commerce-status')).toHaveText(
     'A resposta não chegou. Tentar de novo.',
     { timeout: 10_000 },
@@ -346,7 +346,7 @@ test('timeout, refresh sem POST e retry manual usam a mesma chave', async ({
   await expect(page.getByTestId('pending-quote')).toHaveText(key.quoteId)
   await expect(page.getByTestId('pending-total')).toHaveText(key.total)
   await expect(
-    page.getByRole('button', { name: 'Confirm Button' }),
+    page.getByRole('button', { name: 'Confirmar compra' }),
   ).toHaveCount(0)
   expect(posts).toEqual([])
   await page.getByRole('button', { name: 'Tentar de novo' }).click()
@@ -403,7 +403,7 @@ test('clique duplo envia um único pedido', async ({ page }) => {
       posts.push(url.pathname)
     }
   })
-  const confirm = page.getByRole('button', { name: 'Confirm Button' })
+  const confirm = page.getByRole('button', { name: 'Confirmar compra' })
   await confirm.click()
   await confirm.click({ force: true }).catch(() => undefined)
   await expect(page.getByTestId('order-status')).toHaveText('pending')
@@ -413,7 +413,7 @@ test('clique duplo envia um único pedido', async ({ page }) => {
 test('Bia não vê favorito nem pedido da Ada', async ({ page }) => {
   await login(page, adaEmail, adaPassword)
   await reviewCheckout(page)
-  await page.getByRole('button', { name: 'Confirm Button' }).click()
+  await page.getByRole('button', { name: 'Confirmar compra' }).click()
   await expect(page.getByTestId('order-status')).toHaveText('pending')
   const orderId = await page.getByTestId('order-id').innerText()
   const leaked = await page.evaluate(async () => {
@@ -536,7 +536,7 @@ test('confirmação remove só a quantidade comprada', async ({ page }) => {
   })
   expect(patched).toBe(200)
   await setScenario(page, 'payment-confirmed')
-  await page.getByRole('button', { name: 'Confirm Button' }).click()
+  await page.getByRole('button', { name: 'Confirmar compra' }).click()
   await expect(page.getByTestId('order-receipt')).toBeVisible()
   await openCart(page)
   await expect(page.getByRole('textbox', { name: 'Quantidade' })).toHaveValue(
