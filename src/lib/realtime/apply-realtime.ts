@@ -320,7 +320,7 @@ export async function applyNftUpdated(
     }
   }
 
-  if (patched || !sawNft) {
+  if (patched || refetchKeys.length > 0 || !sawNft) {
     await invalidateCommerce(client, event.nftId)
   }
   for (const queryKey of refetchKeys) {

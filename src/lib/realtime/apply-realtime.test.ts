@@ -272,6 +272,79 @@ describe('cache de tempo real', () => {
     expect(invalidated.some((filters) => filters.queryKey)).toBe(true)
   })
 
+  it('refetch sem editionId invalida só o comércio daquele NFT', async () => {
+    const { client, invalidated } = clientWith()
+    const seen = new Set<string>()
+    client.setQueryData(['nfts', 'detail', 'nft-aurora'], nft(1))
+    client.setQueryData(['nfts', { page: 1 }], page(nft(1)))
+    client.setQueryData(['quote', 'user-ada', 'aurora'], {
+      items: [
+        { nftId: 'nft-aurora', editionId: 'edition-aurora-1', quantity: 1 },
+      ],
+    })
+    client.setQueryData(['quote', 'user-ada', 'moss'], {
+      items: [{ nftId: 'nft-moss' }],
+    })
+    client.setQueryData(['cart', 'user-ada'], {
+      items: [{ nftId: 'nft-aurora' }],
+    })
+    client.setQueryData(['cart', 'user-bia'], {
+      items: [{ nftId: 'nft-moss' }],
+    })
+
+    const event = {
+      eventId: 'event-broad',
+      nftId: 'nft-aurora',
+      version: 2,
+      price: '2.000000000000000000',
+    }
+    await applyNftUpdated(client, event, seen)
+
+    expect(
+      client.getQueryData<Nft>(['nfts', 'detail', 'nft-aurora'])?.version,
+    ).toBe(1)
+    expect(readPriceNotice()).toBe('O preço mudou.')
+    const commerce = invalidated.find((filters) => filters.predicate)
+    const auroraQuote = client
+      .getQueryCache()
+      .find({ queryKey: ['quote', 'user-ada', 'aurora'] })
+    const mossQuote = client
+      .getQueryCache()
+      .find({ queryKey: ['quote', 'user-ada', 'moss'] })
+    const adaCart = client
+      .getQueryCache()
+      .find({ queryKey: ['cart', 'user-ada'] })
+    const biaCart = client
+      .getQueryCache()
+      .find({ queryKey: ['cart', 'user-bia'] })
+    expect(auroraQuote && commerce?.predicate?.(auroraQuote)).toBe(true)
+    expect(adaCart && commerce?.predicate?.(adaCart)).toBe(true)
+    expect(mossQuote && commerce?.predicate?.(mossQuote)).toBe(false)
+    expect(biaCart && commerce?.predicate?.(biaCart)).toBe(false)
+    expect(
+      invalidated.some(
+        (filters) =>
+          Array.isArray(filters.queryKey) &&
+          filters.queryKey[0] === 'nfts' &&
+          filters.queryKey[1] === 'detail',
+      ),
+    ).toBe(true)
+
+    const before = invalidated.length
+    await applyNftUpdated(client, event, seen)
+    await applyNftUpdated(
+      client,
+      {
+        eventId: 'event-old',
+        nftId: 'nft-aurora',
+        version: 1,
+        price: '1.000000000000000000',
+      },
+      seen,
+    )
+    expect(invalidated).toHaveLength(before)
+  })
+
   it('ignora payload inválido', async () => {
     const { client } = clientWith()
     client.setQueryData(['nfts', 'detail', 'nft-aurora'], nft(1))
