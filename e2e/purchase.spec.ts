@@ -53,6 +53,7 @@ function watchQuotes(page: Page) {
           })
         }
       },
+      () => undefined,
     )
   })
   return quotes

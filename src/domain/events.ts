@@ -21,3 +21,13 @@ export function keepTerminalStatus(
   }
   return incoming
 }
+
+export function acceptsOrderStatus(
+  current: OrderStatus,
+  incoming: OrderStatus,
+): boolean {
+  if (current === 'pending') {
+    return true
+  }
+  return current === incoming
+}

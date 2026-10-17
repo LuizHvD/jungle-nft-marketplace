@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { acceptEventVersion, keepTerminalStatus } from './events.ts'
+import {
+  acceptEventVersion,
+  acceptsOrderStatus,
+  keepTerminalStatus,
+} from './events.ts'
 
 describe('versão de evento', () => {
   it('descarta evento antigo ou duplicado', () => {
@@ -14,5 +18,13 @@ describe('versão de evento', () => {
     expect(keepTerminalStatus('confirmed', 'pending')).toBe('confirmed')
     expect(keepTerminalStatus('declined', 'confirmed')).toBe('declined')
     expect(keepTerminalStatus('pending', 'confirmed')).toBe('confirmed')
+  })
+
+  it('descarta regressão de status terminal', () => {
+    expect(acceptsOrderStatus('pending', 'confirmed')).toBe(true)
+    expect(acceptsOrderStatus('pending', 'declined')).toBe(true)
+    expect(acceptsOrderStatus('confirmed', 'confirmed')).toBe(true)
+    expect(acceptsOrderStatus('confirmed', 'pending')).toBe(false)
+    expect(acceptsOrderStatus('declined', 'confirmed')).toBe(false)
   })
 })

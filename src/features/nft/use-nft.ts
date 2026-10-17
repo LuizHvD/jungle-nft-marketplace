@@ -2,11 +2,13 @@ import { useQuery } from '@tanstack/react-query'
 
 import { nftSchema } from '@/contracts/nfts.ts'
 import { http } from '@/lib/http/client.ts'
+import { shareNftData } from '@/lib/realtime/apply-realtime.ts'
 
 export function nftQueryOptions(nftId: string) {
   return {
     queryKey: ['nfts', 'detail', nftId] as const,
     retry: 1,
+    structuralSharing: shareNftData,
     queryFn: async ({ signal }: { signal: AbortSignal }) => {
       const response = await http.get(`/nfts/${encodeURIComponent(nftId)}`, {
         signal,
