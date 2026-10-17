@@ -1,20 +1,31 @@
 import { useEffect } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 
-import { connectSessionSocket, disconnectSessionSocket } from '@/lib/realtime/session-socket.ts'
-
+import {
+  connectSessionSocket,
+  readActiveToken,
+} from '@/lib/realtime/session-socket.ts'
+import { refetchRealtime } from '@/lib/realtime/apply-realtime.ts'
 import { useSession } from '@/lib/session/session.ts'
 
 export function SessionSocketBinding() {
   const session = useSession()
-  const token = session.data?.token
+  const token = session.data?.token ?? null
+  const client = useQueryClient()
 
   useEffect(() => {
-    if (!token) {
-      disconnectSessionSocket()
-      return
+    connectSessionSocket(token, client)
+  }, [token, client])
+
+  useEffect(() => {
+    const onFocus = () => {
+      refetchRealtime(client, readActiveToken())
     }
-    connectSessionSocket(token)
-  }, [token])
+    window.addEventListener('focus', onFocus)
+    return () => {
+      window.removeEventListener('focus', onFocus)
+    }
+  }, [client])
 
   return null
 }

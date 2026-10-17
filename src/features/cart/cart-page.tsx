@@ -15,10 +15,16 @@ import {
 import { mergeGuestCart } from '@/lib/commerce/merge-guest-cart.ts'
 import { apiErrorMessage } from '@/lib/http/error.ts'
 import { readStoredToken } from '@/lib/session/storage.ts'
+import { usePriceNotice } from '@/lib/realtime/price-notice.ts'
 import { useSession } from '@/lib/session/session.ts'
 
 import { MoneySummary } from './money-summary.tsx'
-import { commerceActorId, useCart, useRemoveCartItem, useUpdateCartItem } from './use-cart.ts'
+import {
+  commerceActorId,
+  useCart,
+  useRemoveCartItem,
+  useUpdateCartItem,
+} from './use-cart.ts'
 import { useQuote } from './use-quote.ts'
 
 export function CartPage() {
@@ -31,9 +37,12 @@ export function CartPage() {
   const navigate = useNavigate()
   const client = useQueryClient()
   const [couponInput, setCouponInput] = useState(() => readCouponDraft(actorId))
-  const [appliedCoupon, setAppliedCoupon] = useState(() => readCouponDraft(actorId))
+  const [appliedCoupon, setAppliedCoupon] = useState(() =>
+    readCouponDraft(actorId),
+  )
   const [mergeFailed, setMergeFailed] = useState(() => readMergeFailed())
   const [status, setStatus] = useState('')
+  const priceNotice = usePriceNotice()
   const items = cart.data?.items ?? []
   const details = useQueries({
     queries: items.map((item) => nftQueryOptions(item.nftId)),
@@ -43,7 +52,10 @@ export function CartPage() {
     editionId: item.editionId,
     quantity: item.quantity,
   }))
-  const baseQuote = useQuote(actorId, items.length > 0 ? { items: lines } : null)
+  const baseQuote = useQuote(
+    actorId,
+    items.length > 0 ? { items: lines } : null,
+  )
   const couponQuote = useQuote(
     actorId,
     items.length > 0 && appliedCoupon
@@ -78,7 +90,7 @@ export function CartPage() {
   return (
     <main className="flex flex-col gap-[4px] min-[1440px]:gap-[96px]">
       <h1>Carrinho</h1>
-      <CommerceStatus message={status} />
+      <CommerceStatus message={status || priceNotice} />
       {mergeFailed ? (
         <button type="button" onClick={() => void retryMerge()}>
           Unir carrinho
@@ -88,19 +100,25 @@ export function CartPage() {
         <Skeleton data-testid="cart-skeleton" className="h-[45px] w-full" />
       ) : null}
       {cart.isError ? (
-        <p>{apiErrorMessage(cart.error, 'Não foi possível carregar o carrinho.')}</p>
+        <p>
+          {apiErrorMessage(cart.error, 'Não foi possível carregar o carrinho.')}
+        </p>
       ) : null}
       {cart.isSuccess && items.length === 0 ? <p>Carrinho vazio</p> : null}
       <ul className="flex flex-col gap-[8px]">
         {items.map((item, index) => {
           const nft = details[index]?.data
-          const edition = nft?.editions.find((entry) => entry.id === item.editionId)
+          const edition = nft?.editions.find(
+            (entry) => entry.id === item.editionId,
+          )
           const supply = edition?.availableSupply ?? item.quantity
           return (
             <li key={item.id} data-testid={`cart-line-${item.editionId}`}>
               <p>{nft?.name ?? item.nftId}</p>
               <p>{item.editionId}</p>
-              <p data-testid={`line-total-${item.editionId}`}>{item.lineTotal}</p>
+              <p data-testid={`line-total-${item.editionId}`}>
+                {item.lineTotal}
+              </p>
               <QuantityField
                 supply={supply}
                 quantity={item.quantity}
@@ -108,17 +126,31 @@ export function CartPage() {
                   if (quantity === item.quantity) {
                     return
                   }
-                  void updateItem.mutateAsync({ id: item.id, quantity }).catch((error: unknown) => {
-                    setStatus(apiErrorMessage(error, 'Não foi possível alterar a quantidade.'))
-                  })
+                  void updateItem
+                    .mutateAsync({ id: item.id, quantity })
+                    .catch((error: unknown) => {
+                      setStatus(
+                        apiErrorMessage(
+                          error,
+                          'Não foi possível alterar a quantidade.',
+                        ),
+                      )
+                    })
                 }}
               />
               <button
                 type="button"
                 onClick={() => {
-                  void removeItem.mutateAsync(item.id).catch((error: unknown) => {
-                    setStatus(apiErrorMessage(error, 'Não foi possível remover o item.'))
-                  })
+                  void removeItem
+                    .mutateAsync(item.id)
+                    .catch((error: unknown) => {
+                      setStatus(
+                        apiErrorMessage(
+                          error,
+                          'Não foi possível remover o item.',
+                        ),
+                      )
+                    })
                 }}
               >
                 Remover
@@ -156,7 +188,11 @@ export function CartPage() {
           Remover cupom
         </button>
       </form>
-      {quoteError ? <p role="alert">{apiErrorMessage(quoteError, 'Cotação indisponível.')}</p> : null}
+      {quoteError ? (
+        <p role="alert">
+          {apiErrorMessage(quoteError, 'Cotação indisponível.')}
+        </p>
+      ) : null}
       {quote ? (
         <MoneySummary
           subtotal={quote.subtotal}

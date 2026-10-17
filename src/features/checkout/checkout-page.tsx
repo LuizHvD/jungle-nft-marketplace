@@ -16,13 +16,24 @@ import {
   type CheckoutNetwork,
   type CheckoutStep,
 } from '@/lib/commerce/checkout-draft.ts'
-import { pendingOrderRetry, prepareOrderAttempt } from '@/lib/commerce/order-attempt.ts'
+import {
+  pendingOrderRetry,
+  prepareOrderAttempt,
+} from '@/lib/commerce/order-attempt.ts'
 import { confirmAllowed } from '@/lib/commerce/quote-guard.ts'
 import { http } from '@/lib/http/client.ts'
-import { apiErrorCode, apiErrorMessage, isAbortError } from '@/lib/http/error.ts'
+import {
+  apiErrorCode,
+  apiErrorMessage,
+  isAbortError,
+} from '@/lib/http/error.ts'
 import { commitOwnedWallet, readActorStamp } from '@/lib/session/owned-cache.ts'
+import { usePriceNotice } from '@/lib/realtime/price-notice.ts'
 import { useSession } from '@/lib/session/session.ts'
-import { storedPlaceInput, usePlaceOrder } from '@/features/orders/use-place-order.ts'
+import {
+  storedPlaceInput,
+  usePlaceOrder,
+} from '@/features/orders/use-place-order.ts'
 
 const networks: CheckoutNetwork[] = ['demo-mainnet', 'demo-l2']
 
@@ -39,8 +50,11 @@ export function CheckoutPage() {
   const place = usePlaceOrder()
   const draft = userId ? readCheckoutDraft(userId) : null
   const [walletId, setWalletId] = useState(draft?.walletId ?? '')
-  const [network, setNetwork] = useState<CheckoutNetwork>(draft?.network ?? 'demo-mainnet')
+  const [network, setNetwork] = useState<CheckoutNetwork>(
+    draft?.network ?? 'demo-mainnet',
+  )
   const [notice, setNotice] = useState('')
+  const priceNotice = usePriceNotice()
   const [rejectedQuoteId, setRejectedQuoteId] = useState<string | null>(null)
   const list = wallets.data?.wallets ?? []
   const resolvedWalletId = walletId || list[0]?.id || ''
@@ -78,7 +92,11 @@ export function CheckoutPage() {
     pendingAttempt: Boolean(pending),
   })
 
-  function persist(nextStep: CheckoutStep, nextWallet: string, nextNetwork: CheckoutNetwork) {
+  function persist(
+    nextStep: CheckoutStep,
+    nextWallet: string,
+    nextNetwork: CheckoutNetwork,
+  ) {
     if (!userId) {
       return
     }
@@ -94,10 +112,13 @@ export function CheckoutPage() {
     retry: false,
     mutationFn: async () => {
       const stamp = readActorStamp()
-      const response = await http.post(`/wallets/${resolvedWalletId}/connection`, {
-        network,
-        action: 'connect',
-      })
+      const response = await http.post(
+        `/wallets/${resolvedWalletId}/connection`,
+        {
+          network,
+          action: 'connect',
+        },
+      )
       return { wallet: walletSchema.parse(response.data), stamp }
     },
     onSuccess: ({ wallet: next, stamp }) => {
@@ -129,12 +150,13 @@ export function CheckoutPage() {
     }
   }
 
-  const retryable = Boolean(pending) || notice === 'Retome a tentativa anterior.'
+  const retryable =
+    Boolean(pending) || notice === 'Retome a tentativa anterior.'
   const status = place.isError
     ? isAbortError(place.error)
       ? 'A resposta não chegou. Tentar de novo.'
       : apiErrorMessage(place.error, 'Não foi possível criar o pedido.')
-    : notice
+    : notice || priceNotice
 
   return (
     <main className="flex flex-col gap-[4px] min-[1440px]:gap-[96px]">
@@ -186,7 +208,9 @@ export function CheckoutPage() {
         ))}
       </select>
       <p data-testid="wallet-connection">
-        {wallet ? `${wallet.connection.status} ${wallet.connection.network ?? ''}` : 'sem carteira'}
+        {wallet
+          ? `${wallet.connection.status} ${wallet.connection.network ?? ''}`
+          : 'sem carteira'}
       </p>
       {connected ? null : (
         <button
@@ -210,7 +234,9 @@ export function CheckoutPage() {
         </button>
       ) : null}
       {finalQuote.isError ? (
-        <p role="alert">{apiErrorMessage(finalQuote.error, 'Cotação indisponível.')}</p>
+        <p role="alert">
+          {apiErrorMessage(finalQuote.error, 'Cotação indisponível.')}
+        </p>
       ) : null}
       {quote ? (
         <MoneySummary

@@ -6,6 +6,7 @@ import { http } from '@/lib/http/client.ts'
 import { apiErrorMessage, isNotFoundError } from '@/lib/http/error.ts'
 import { useSession } from '@/lib/session/session.ts'
 import { readActorStamp } from '@/lib/session/owned-cache.ts'
+import { shareOrderData } from '@/lib/realtime/apply-realtime.ts'
 
 import { MoneySummary } from '@/features/cart/money-summary.tsx'
 
@@ -20,6 +21,7 @@ export function OrderDetailPage({ orderId }: OrderDetailPageProps) {
     queryKey: ['orders', userId, orderId],
     enabled: Boolean(userId),
     retry: false,
+    structuralSharing: shareOrderData,
     queryFn: async ({ signal }) => {
       const stamp = readActorStamp()
       const response = await http.get(`/orders/${orderId}`, { signal })
@@ -52,7 +54,9 @@ export function OrderDetailPage({ orderId }: OrderDetailPageProps) {
     return (
       <main>
         <h1>Pedido</h1>
-        <p>{apiErrorMessage(order.error, 'Não foi possível carregar o pedido.')}</p>
+        <p>
+          {apiErrorMessage(order.error, 'Não foi possível carregar o pedido.')}
+        </p>
         <button type="button" onClick={() => void order.refetch()}>
           Tentar de novo
         </button>
@@ -67,9 +71,14 @@ export function OrderDetailPage({ orderId }: OrderDetailPageProps) {
     <main className="flex flex-col gap-[4px] px-0 min-[1440px]:gap-[96px]">
       <h1>Pedido</h1>
       <p data-testid="order-id">{current.id}</p>
-      <p data-testid="order-status">{current.status}</p>
+      <p data-testid="order-status" aria-live="polite">
+        {current.status}
+      </p>
       {confirmed ? (
-        <section aria-label="Order Confirmation Modal" data-testid="order-receipt">
+        <section
+          aria-label="Order Confirmation Modal"
+          data-testid="order-receipt"
+        >
           <h2>Recibo</h2>
           <p>Transação {current.id}</p>
           <ul>

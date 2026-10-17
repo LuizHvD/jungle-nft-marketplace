@@ -4,7 +4,10 @@ import type { z } from 'zod'
 import { quoteRequestSchema, quoteSchema } from '@/contracts/quotes.ts'
 import { http } from '@/lib/http/client.ts'
 import { cartStampCurrent, readCartStamp } from '@/lib/commerce/owned.ts'
-import { quoteSignature, type QuoteLine } from '@/lib/commerce/quote-signature.ts'
+import {
+  quoteSignature,
+  type QuoteLine,
+} from '@/lib/commerce/quote-signature.ts'
 
 type QuoteBody = z.infer<typeof quoteRequestSchema>
 

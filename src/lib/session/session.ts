@@ -7,7 +7,11 @@ import { connectSessionSocket } from '@/lib/realtime/session-socket.ts'
 import { loadSession } from './fetch-session.ts'
 import { clearPrivateCache, sessionQueryKey } from './private-cache.ts'
 import { retrySessionQuery } from './retry-session.ts'
-import { readStoredSession, readStoredToken, writeStoredSession } from './storage.ts'
+import {
+  readStoredSession,
+  readStoredToken,
+  writeStoredSession,
+} from './storage.ts'
 
 export function sessionQueryOptions() {
   return {
@@ -58,5 +62,5 @@ export function adoptSession(
   clearPrivateCache(client)
   writeStoredSession(session)
   client.setQueryData(sessionQueryKey, session)
-  connectSessionSocket(session.token)
+  connectSessionSocket(session.token, client)
 }
