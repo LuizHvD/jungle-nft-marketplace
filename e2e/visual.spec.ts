@@ -20,8 +20,10 @@ async function shoot(page: Page, name: string) {
           return Promise.resolve()
         }
         return new Promise<void>((resolve) => {
-          img.addEventListener('load', () => resolve(), { once: true })
-          img.addEventListener('error', () => resolve(), { once: true })
+          const done = () => resolve()
+          img.addEventListener('load', done, { once: true })
+          img.addEventListener('error', done, { once: true })
+          window.setTimeout(done, 4000)
         })
       }),
     )
