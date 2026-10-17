@@ -56,7 +56,7 @@ export function SiteHeader() {
           KURIO
         </Link>
         <nav aria-label="Principal" className="h-full">
-          <ul className="flex h-full items-stretch gap-5 lg:gap-8 xl:gap-10">
+            <ul className="flex h-full items-stretch gap-3 lg:gap-8 xl:gap-10">
             {navItems.map((item) => {
               const current = active === item.id
               return (
@@ -66,7 +66,7 @@ export function SiteHeader() {
                     hash={'hash' in item ? item.hash : undefined}
                     aria-current={current ? 'page' : undefined}
                     className={cn(
-                      'relative flex items-center text-base hover:text-brand',
+                        'relative flex items-center text-sm hover:text-brand lg:text-base',
                       current
                         ? 'font-semibold text-brand after:absolute after:inset-x-0 after:-bottom-px after:h-[3px] after:bg-primary'
                         : 'text-foreground',
