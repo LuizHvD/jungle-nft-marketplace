@@ -1,4 +1,5 @@
 import type { Nft } from '@/contracts/nfts.ts'
+import { formatEth } from '@/lib/format-eth.ts'
 
 type EditionPickerProps = {
   editions: Nft['editions']
@@ -12,21 +13,29 @@ export function EditionPicker({
   onSelect,
 }: EditionPickerProps) {
   return (
-    <fieldset className="flex flex-col gap-[8px]">
-      <legend>Edição</legend>
-      {editions.map((edition) => (
-        <label key={edition.id} className="flex items-center gap-[8px]">
-          <input
-            type="radio"
-            name="edition"
-            value={edition.id}
-            checked={edition.id === selectedId}
-            onChange={() => onSelect(edition.id)}
-          />
-          <span>{edition.price}</span>
-          <span>{edition.availableSupply}</span>
-        </label>
-      ))}
+    <fieldset className="flex flex-wrap gap-2">
+      <legend className="mb-2 w-full text-sm">Edição</legend>
+      {editions.map((edition) => {
+        const selected = edition.id === selectedId
+        return (
+          <label
+            key={edition.id}
+            className={`flex min-h-11 items-center gap-2 rounded-full border px-3 text-sm ${selected ? 'border-primary bg-primary text-ink' : 'border-border'}`}
+          >
+            <input
+              type="radio"
+              name="edition"
+              value={edition.id}
+              checked={selected}
+              className="sr-only"
+              onChange={() => onSelect(edition.id)}
+            />
+            <span className="sr-only">{edition.price}</span>
+            <span>{formatEth(edition.price)}</span>
+            <span>{edition.availableSupply}</span>
+          </label>
+        )
+      })}
     </fieldset>
   )
 }

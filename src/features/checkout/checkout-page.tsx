@@ -159,11 +159,17 @@ export function CheckoutPage() {
     : notice || priceNotice
 
   return (
-    <main className="flex flex-col gap-[4px] min-[1440px]:gap-[96px]">
-      <h1>Checkout</h1>
-      <p data-testid="checkout-step">{step}</p>
-      <p data-testid="quote-state">{canConfirm ? 'ready' : 'blocked'}</p>
-      <p data-testid="quote-id">{quote?.quoteId ?? ''}</p>
+    <main className="flex flex-col gap-4 py-6 pb-28 md:pb-10">
+      <h1 className="text-2xl font-bold">Pagamento com carteira</h1>
+      <p className="sr-only" data-testid="checkout-step">
+        {step}
+      </p>
+      <p className="sr-only" data-testid="quote-state">
+        {canConfirm ? 'ready' : 'blocked'}
+      </p>
+      <p className="sr-only" data-testid="quote-id">
+        {quote?.quoteId ?? ''}
+      </p>
       <CommerceStatus message={status} />
       {pending ? (
         <section data-testid="pending-attempt">
@@ -252,6 +258,7 @@ export function CheckoutPage() {
           type="button"
           aria-busy={place.isPending}
           disabled={place.isPending}
+          className="h-12 w-full rounded-full bg-primary text-base font-semibold text-ink hover:bg-primary/85 disabled:opacity-50"
           onClick={() => {
             if (!userId) {
               return
@@ -272,7 +279,7 @@ export function CheckoutPage() {
             })
           }}
         >
-          Confirm Button
+          Confirmar compra
         </button>
       ) : null}
       {retryable ? (

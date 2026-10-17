@@ -56,8 +56,10 @@ export function AuthScreen({ title, returnTo, children }: AuthScreenProps) {
   }, [desktop, navigate, returnTo])
 
   const stack = (
-    <div className="flex flex-col gap-[40px]">
-      <h1 id="auth-title">{title}</h1>
+    <div className="mx-auto flex w-full max-w-md flex-col gap-8">
+      <h1 id="auth-title" className="text-center text-2xl font-bold">
+        {title}
+      </h1>
       {children}
     </div>
   )
@@ -67,14 +69,15 @@ export function AuthScreen({ title, returnTo, children }: AuthScreenProps) {
       <dialog
         ref={dialogRef}
         aria-labelledby="auth-title"
-        className="relative w-full max-w-[1200px] border-0 bg-ink p-0 text-inherit"
+        className="w-full max-w-lg rounded-xl border border-border bg-surface p-8 text-inherit"
       >
         <button
           type="button"
-          className="absolute top-0 right-0"
+          className="absolute top-4 right-4 flex size-9 items-center justify-center rounded-full text-brand"
           onClick={() => dialogRef.current?.close()}
         >
-          X
+          <span aria-hidden="true">×</span>
+          <span className="sr-only">Fechar</span>
         </button>
         {stack}
       </dialog>
@@ -82,8 +85,8 @@ export function AuthScreen({ title, returnTo, children }: AuthScreenProps) {
   }
 
   return (
-    <main className="flex flex-col gap-[40px] px-[28px] pb-[24px] pt-[80px]">
-      <Link to="/" className="inline-flex h-[34.3px] w-[160px] items-center">
+    <main className="flex flex-col gap-10 px-7 pt-16 pb-8">
+      <Link to="/" className="mx-auto text-2xl font-bold tracking-[0.2em]">
         KURIO
       </Link>
       {stack}

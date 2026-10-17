@@ -88,8 +88,8 @@ export function CartPage() {
   }
 
   return (
-    <main className="flex flex-col gap-[4px] min-[1440px]:gap-[96px]">
-      <h1>Carrinho</h1>
+    <main className="flex flex-col gap-4 py-6 pb-28 md:pb-10">
+      <h1 className="text-2xl font-bold">Carrinho de NFTs</h1>
       <CommerceStatus message={status || priceNotice} />
       {mergeFailed ? (
         <button type="button" onClick={() => void retryMerge()}>
@@ -121,7 +121,11 @@ export function CartPage() {
           )
           const supply = edition?.availableSupply ?? item.quantity
           return (
-            <li key={item.id} data-testid={`cart-line-${item.editionId}`}>
+            <li
+              key={item.id}
+              data-testid={`cart-line-${item.editionId}`}
+              className="grid grid-cols-[72px_minmax(0,1fr)] gap-3 rounded-xl bg-surface p-3"
+            >
               <p>{nft?.name ?? item.nftId}</p>
               <p>{item.editionId}</p>
               <p data-testid={`line-total-${item.editionId}`}>
@@ -220,6 +224,7 @@ export function CartPage() {
         <button
           type="button"
           disabled={busy}
+          className="h-12 w-full rounded-full bg-primary text-base font-semibold text-ink hover:bg-primary/85 disabled:cursor-not-allowed md:w-auto md:px-8"
           onClick={() => {
             if (userId) {
               void navigate({ to: '/checkout', search: { step: 'dados' } })
@@ -228,7 +233,7 @@ export function CartPage() {
             void navigate({ to: '/login', search: { returnTo: '/checkout' } })
           }}
         >
-          Checkout Button
+          Conectar e finalizar
         </button>
       ) : null}
     </main>

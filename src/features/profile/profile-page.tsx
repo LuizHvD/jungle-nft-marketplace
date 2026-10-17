@@ -11,9 +11,13 @@ import { Skeleton } from '@/components/ui/skeleton.tsx'
 import { focusFirstInvalid, zodResolver } from '@/lib/forms/zod-resolver.ts'
 import { http } from '@/lib/http/client.ts'
 import { apiErrorCode, apiErrorMessage } from '@/lib/http/error.ts'
-import { commitOwnedProfile, readActorStamp } from '@/lib/session/owned-cache.ts'
+import {
+  commitOwnedProfile,
+  readActorStamp,
+} from '@/lib/session/owned-cache.ts'
 import { useSession } from '@/lib/session/session.ts'
 
+import { AccountNav } from '@/features/account/account-nav.tsx'
 import { TextField } from '@/features/auth/text-field.tsx'
 
 import { avatarOptions } from './avatar-options.ts'
@@ -49,7 +53,10 @@ function NameForm({ profile }: { profile: Profile }) {
           await save.mutateAsync(values)
         } catch (mutationError) {
           form.setError('name', {
-            message: apiErrorMessage(mutationError, 'Não foi possível salvar o nome.'),
+            message: apiErrorMessage(
+              mutationError,
+              'Não foi possível salvar o nome.',
+            ),
           })
         }
       }, focusFirstInvalid)}
@@ -61,7 +68,11 @@ function NameForm({ profile }: { profile: Profile }) {
         error={error}
         registration={form.register('name')}
       />
-      <button type="submit" aria-busy={save.isPending} disabled={save.isPending}>
+      <button
+        type="submit"
+        aria-busy={save.isPending}
+        disabled={save.isPending}
+      >
         Salvar nome
       </button>
     </form>
@@ -115,7 +126,10 @@ function PasswordForm() {
   })
   const save = useMutation({
     retry: 0,
-    mutationFn: async (values: { currentPassword: string; nextPassword: string }) => {
+    mutationFn: async (values: {
+      currentPassword: string
+      nextPassword: string
+    }) => {
       await http.patch('/profile/password', values)
     },
   })
@@ -140,7 +154,10 @@ function PasswordForm() {
             return
           }
           form.setError('root', {
-            message: apiErrorMessage(error, 'Não foi possível alterar a senha.'),
+            message: apiErrorMessage(
+              error,
+              'Não foi possível alterar a senha.',
+            ),
           })
         }
       }, focusFirstInvalid)}
@@ -162,7 +179,11 @@ function PasswordForm() {
         registration={form.register('nextPassword')}
       />
       {rootError ? <p role="alert">{rootError}</p> : null}
-      <button type="submit" aria-busy={save.isPending} disabled={save.isPending}>
+      <button
+        type="submit"
+        aria-busy={save.isPending}
+        disabled={save.isPending}
+      >
         Alterar senha
       </button>
     </form>
@@ -176,7 +197,7 @@ export function ProfilePage() {
   if (!session.data) {
     return (
       <main aria-busy="true">
-        <h1>Perfil</h1>
+        <h1 className="text-2xl font-bold">Perfil do colecionador</h1>
         <Skeleton data-testid="profile-skeleton" className="h-[45px] w-full" />
       </main>
     )
@@ -185,7 +206,7 @@ export function ProfilePage() {
   if (profile.isPending) {
     return (
       <main aria-busy="true">
-        <h1>Perfil</h1>
+        <h1 className="text-2xl font-bold">Perfil do colecionador</h1>
         <Skeleton data-testid="profile-skeleton" className="h-[45px] w-full" />
       </main>
     )
@@ -194,8 +215,13 @@ export function ProfilePage() {
   if (profile.isError || !profile.data) {
     return (
       <main>
-        <h1>Perfil</h1>
-        <p role="alert">{apiErrorMessage(profile.error, 'Não foi possível carregar o perfil.')}</p>
+        <h1 className="text-2xl font-bold">Perfil do colecionador</h1>
+        <p role="alert">
+          {apiErrorMessage(
+            profile.error,
+            'Não foi possível carregar o perfil.',
+          )}
+        </p>
         <button type="button" onClick={() => void profile.refetch()}>
           Tentar de novo
         </button>
@@ -204,12 +230,17 @@ export function ProfilePage() {
   }
 
   return (
-    <main>
-      <h1>Perfil</h1>
-      <p>E-mail {profile.data.email}</p>
-      <NameForm key={profile.data.name} profile={profile.data} />
-      <AvatarForm profile={profile.data} />
-      <PasswordForm />
+    <main className="grid gap-8 py-6 md:grid-cols-[240px_minmax(0,1fr)]">
+      <AccountNav />
+      <div className="flex max-w-3xl flex-col gap-8">
+        <h1 className="text-2xl font-bold">Perfil do colecionador</h1>
+        <p className="text-sm text-muted-foreground">
+          E-mail {profile.data.email}
+        </p>
+        <NameForm key={profile.data.name} profile={profile.data} />
+        <AvatarForm profile={profile.data} />
+        <PasswordForm />
+      </div>
     </main>
   )
 }

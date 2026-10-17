@@ -29,20 +29,22 @@ export function QuantityField({
   return (
     <div className="flex flex-col gap-[8px]">
       {soldOut ? <p>Edição esgotada</p> : null}
-      <div className="flex items-center gap-[8px]">
+      <div className="flex items-center gap-2">
         <button
           type="button"
           aria-label="Diminuir quantidade"
           disabled={canDecrease === false}
+          className="flex size-8 items-center justify-center rounded-full border border-border disabled:opacity-40"
           onClick={() => onChange(quantity - 1)}
         >
-          Diminuir
+          −
         </button>
         <input
           aria-label="Quantidade"
           inputMode="numeric"
           value={String(quantity)}
           disabled={soldOut}
+          className="h-8 w-12 rounded-md border border-border bg-transparent text-center"
           onChange={(event) => {
             const next = event.target.value
             if (next.length === 0) {
@@ -58,9 +60,10 @@ export function QuantityField({
           type="button"
           aria-label="Aumentar quantidade"
           disabled={canIncrease === false}
+          className="flex size-8 items-center justify-center rounded-full border border-border disabled:opacity-40"
           onClick={() => onChange(quantity + 1)}
         >
-          Aumentar
+          +
         </button>
       </div>
     </div>

@@ -40,10 +40,11 @@ export function CatalogControls() {
   }
 
   return (
-    <div className="flex flex-col gap-[16px]">
+    <div className="flex flex-col gap-4 rounded-xl bg-surface p-4">
       <label className="flex flex-col gap-[8px]">
         Disponibilidade
         <select
+          className="h-11 rounded-md border border-border bg-background px-3"
           value={search.available ?? ''}
           onChange={(event) => {
             const available = event.target.value
@@ -65,6 +66,7 @@ export function CatalogControls() {
       <label className="flex flex-col gap-[8px]">
         Ordenação
         <select
+          className="h-11 rounded-md border border-border bg-background px-3"
           value={search.sort ?? ''}
           onChange={(event) => {
             const sort = event.target.value

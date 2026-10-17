@@ -3,7 +3,11 @@ import { Link, useNavigate, useSearch } from '@tanstack/react-router'
 import { useForm } from 'react-hook-form'
 
 import { credentialsSchema, sessionSchema } from '@/contracts/auth.ts'
-import { applyFieldErrors, focusFirstInvalid, zodResolver } from '@/lib/forms/zod-resolver.ts'
+import {
+  applyFieldErrors,
+  focusFirstInvalid,
+  zodResolver,
+} from '@/lib/forms/zod-resolver.ts'
 import { http } from '@/lib/http/client.ts'
 import { apiErrorMessage } from '@/lib/http/error.ts'
 import { markMergeFailed } from '@/lib/commerce/checkout-draft.ts'
@@ -23,7 +27,8 @@ export function LoginPage() {
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const search = useSearch({ strict: false })
-  const returnTo = typeof search.returnTo === 'string' ? search.returnTo : undefined
+  const returnTo =
+    typeof search.returnTo === 'string' ? search.returnTo : undefined
   const form = useForm<LoginValues>({
     resolver: zodResolver(credentialsSchema),
     defaultValues: { email: '', password: '' },
@@ -42,6 +47,7 @@ export function LoginPage() {
       <form
         id="login-form"
         aria-label="Form"
+        className="flex flex-col gap-4"
         onSubmit={form.handleSubmit(async (values) => {
           try {
             const session = await login.mutateAsync(values)
@@ -84,17 +90,33 @@ export function LoginPage() {
         form="login-form"
         aria-busy={login.isPending}
         disabled={login.isPending}
+        className="h-12 w-full rounded-md bg-primary text-base font-semibold text-ink hover:bg-primary/85 disabled:opacity-50"
       >
-        Sign In Button
+        Entrar
       </button>
-      <button type="button" disabled className="min-[1440px]:hidden">
-        Mobile Social Block
+      <p className="text-center text-sm text-muted-foreground">
+        Ou continue com
+      </p>
+      <button
+        type="button"
+        disabled
+        className="h-11 w-full rounded-md border border-border text-sm"
+      >
+        Continuar com Google
       </button>
-      <button type="button" disabled className="hidden min-[1440px]:inline-flex">
-        Social
+      <button
+        type="button"
+        disabled
+        className="h-11 w-full rounded-md border border-border text-sm"
+      >
+        Continuar com Facebook
       </button>
-      <Link to="/cadastro" search={returnTo ? { returnTo } : {}}>
-        Signup Link
+      <Link
+        to="/cadastro"
+        search={returnTo ? { returnTo } : {}}
+        className="text-center text-sm"
+      >
+        Novo no Kurio? Crie uma conta
       </Link>
     </AuthScreen>
   )
