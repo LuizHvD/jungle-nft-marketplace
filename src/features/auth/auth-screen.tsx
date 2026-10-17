@@ -15,7 +15,9 @@ export function AuthScreen({ title, returnTo, children }: AuthScreenProps) {
   const dialogRef = useRef<HTMLDialogElement>(null)
   const ignoreClose = useRef(false)
   const navigate = useNavigate()
-  const [desktop, setDesktop] = useState(false)
+  const [desktop, setDesktop] = useState(
+    () => window.matchMedia('(min-width: 768px)').matches,
+  )
 
   useLayoutEffect(() => {
     const media = window.matchMedia('(min-width: 768px)')

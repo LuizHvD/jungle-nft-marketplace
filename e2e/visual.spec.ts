@@ -10,6 +10,9 @@ const shots = [
 
 async function shoot(page: Page, name: string) {
   await page.evaluate(async () => {
+    await new Promise<void>((resolve) => {
+      requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
+    })
     const active = document.activeElement
     if (active instanceof HTMLElement) {
       active.blur()
