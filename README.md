@@ -38,20 +38,57 @@ Detalhe em [docs/demo-accounts.md](docs/demo-accounts.md).
 
 ## Cenários
 
-Com o app aberto, no mesmo origem:
+Os endpoints de demo só existem no service worker. `curl` e qualquer cliente fora da página não os alcançam: não há backend HTTP. O worker intercepta `fetch` da aba que ele controla.
 
-```bash
-curl -X POST http://127.0.0.1:5173/api/demo/reset
-curl -X POST http://127.0.0.1:5173/api/demo/scenario \
-  -H 'content-type: application/json' \
-  -d '{"id":"payment-declined"}'
+Abra o app, espere o worker controlar a página (DevTools, Application, Service Workers) e cole no console dessa aba:
+
+```js
+await fetch('/api/demo/reset', { method: 'POST' }).then((response) =>
+  response.json(),
+)
+
+await fetch('/api/demo/scenario', {
+  method: 'POST',
+  headers: { 'content-type': 'application/json' },
+  body: JSON.stringify({ id: 'price-change' }),
+}).then((response) => response.json())
+
+await fetch('/api/demo/clock', {
+  method: 'POST',
+  headers: { 'content-type': 'application/json' },
+  body: JSON.stringify({ now: '2026-10-17T18:00:00.000Z' }),
+}).then((response) => response.json())
+
+await fetch('/api/demo/failures', {
+  method: 'POST',
+  headers: { 'content-type': 'application/json' },
+  body: JSON.stringify({ latencyMs: 2000 }),
+}).then((response) => response.json())
+
+await fetch('/api/demo/failures', {
+  method: 'POST',
+  headers: { 'content-type': 'application/json' },
+  body: JSON.stringify({ status: 500 }),
+}).then((response) => response.json())
+
+await fetch('/api/demo/failures', {
+  method: 'POST',
+  headers: { 'content-type': 'application/json' },
+  body: JSON.stringify({ drop: true }),
+}).then((response) => response.json())
+
+await fetch('/api/demo/failures', {
+  method: 'POST',
+  headers: { 'content-type': 'application/json' },
+  body: JSON.stringify({}),
+}).then((response) => response.json())
 ```
 
 `POST /api/demo/reset` volta à fixture. `POST /api/demo/scenario` aceita `slow`, `timeout`, `validation`, `unauthorized`, `forbidden`, `not-found`, `transient`, `session-expired`, `coupon-invalid`, `coupon-expired`, `price-change`, `sold-out`, `payment-declined` e `payment-confirmed`.
 
-`POST /api/demo/clock` recebe `{ "now": "<ISO>" }` e adianta o relógio do mock. `POST /api/demo/failures` recebe `{ "latencyMs": 2000 }`, `{ "status": 500 }` ou `{ "drop": true }`. Corpo vazio limpa a falha.
+`POST /api/demo/clock` recebe `{ "now": "<ISO com fuso>" }` e adianta o relógio do mock. `POST /api/demo/failures` recebe `{ "latencyMs": 2000 }`, `{ "status": 500 }` ou `{ "drop": true }`. `{}` limpa a falha.
 
-`price-change` e `sold-out` também emitem `nft.updated` pelo socket. A lista de ids está em `GET /api/demo/scenarios`.
+`price-change` e `sold-out` também emitem `nft.updated` pelo socket. A lista de ids está em `GET /api/demo/scenarios`, no mesmo console.
 
 ## Comandos
 
@@ -77,7 +114,7 @@ Smoke do deploy, sem subir o preview local:
 SMOKE_URL=https://sua-url.vercel.app pnpm exec playwright test --config=playwright.smoke.config.ts
 ```
 
-Ele confere o catálogo, `mockServiceWorker.js`, o refresh de `/nfts/nft-aurora` e a troca de preço via `nft.updated`.
+`SMOKE_URL` é obrigatório. Sem ele o spec é ignorado e não chama deploy nenhum. Com a URL, confere MSW, `mockServiceWorker.js`, o refresh de `/nfts/nft-aurora`, a troca de preço via `nft.updated`, o login, o carrinho, o checkout e o pedido.
 
 ## Deploy
 
