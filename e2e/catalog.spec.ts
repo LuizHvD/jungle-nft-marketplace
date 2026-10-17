@@ -313,6 +313,54 @@ test('imagem do catálogo usa srcset AVIF e WebP', async ({ page }) => {
   expect(asset.status()).toBe(200)
 })
 
+test('busca sem resultado mostra o vazio', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await resetCatalog(page)
+  await page.goto('/?q=zzzz')
+  await expect(page.getByText('Nenhum NFT encontrado.')).toBeVisible()
+  await expect(page.getByText('Aurora', { exact: true })).toHaveCount(0)
+})
+
+test('detalhe reserva skeleton, falha e recupera', async ({ page }) => {
+  test.setTimeout(60_000)
+  await page.setViewportSize({ width: 390, height: 844 })
+  await resetCatalog(page)
+  await page.evaluate(async () => {
+    await fetch('/api/demo/failures', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ latencyMs: 2000 }),
+    })
+  })
+  await page.goto('/nfts/nft-aurora')
+  const skeleton = page.getByTestId('nft-detail-skeleton')
+  await expect(skeleton).toBeVisible()
+  const running = await skeleton.evaluate(
+    (element) => getComputedStyle(element).animationName,
+  )
+  expect(running).toContain('skeleton-shimmer')
+  await expect(page.getByRole('heading', { name: 'Aurora' })).toBeVisible()
+
+  await page.evaluate(async () => {
+    await fetch('/api/demo/failures', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ status: 500 }),
+    })
+  })
+  await page.reload()
+  await expect(page.getByText('Falha simulada.')).toBeVisible()
+  await page.evaluate(async () => {
+    await fetch('/api/demo/failures', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({}),
+    })
+  })
+  await page.getByRole('button', { name: 'Tentar de novo' }).click()
+  await expect(page.getByRole('heading', { name: 'Aurora' })).toBeVisible()
+})
+
 test('grade em 768px tem duas colunas', async ({ page }) => {
   await page.setViewportSize({ width: 768, height: 1024 })
   await page.goto('/')

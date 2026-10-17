@@ -1,0 +1,296 @@
+{
+  "base": "http://127.0.0.1:4173",
+  "lighthouseVersion": "13.5.0",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.0.0 Safari/537.36",
+  "environment": {
+    "platform": "win32",
+    "release": "10.0.19045",
+    "arch": "x64"
+  },
+  "targets": [
+    {
+      "name": "inicio-mobile",
+      "path": "/",
+      "preset": "mobile",
+      "runs": [
+        {
+          "scores": {
+            "performance": 94,
+            "accessibility": 100,
+            "best-practices": 100,
+            "seo": 92
+          },
+          "numbers": {
+            "lcp": 2629.228,
+            "cls": 0,
+            "tbt": 4
+          },
+          "fetchTime": "2026-10-17T16:03:30.760Z"
+        },
+        {
+          "scores": {
+            "performance": 94,
+            "accessibility": 100,
+            "best-practices": 100,
+            "seo": 92
+          },
+          "numbers": {
+            "lcp": 2620.2544,
+            "cls": 0,
+            "tbt": 2
+          },
+          "fetchTime": "2026-10-17T16:03:41.149Z"
+        },
+        {
+          "scores": {
+            "performance": 94,
+            "accessibility": 100,
+            "best-practices": 100,
+            "seo": 92
+          },
+          "numbers": {
+            "lcp": 2622.0416000000005,
+            "cls": 0,
+            "tbt": 3
+          },
+          "fetchTime": "2026-10-17T16:03:51.526Z"
+        }
+      ],
+      "median": {
+        "performance": 94,
+        "accessibility": 100,
+        "best-practices": 100,
+        "seo": 92,
+        "lcp": 2622.0416000000005,
+        "cls": 0,
+        "tbt": 3
+      },
+      "below": [],
+      "opportunities": [
+        {
+          "id": "unused-javascript",
+          "title": "Reduce unused JavaScript",
+          "numericValue": 450
+        },
+        {
+          "id": "server-response-time",
+          "title": "Initial server response time was short",
+          "numericValue": 1
+        }
+      ]
+    },
+    {
+      "name": "inicio-desktop",
+      "path": "/",
+      "preset": "desktop",
+      "runs": [
+        {
+          "scores": {
+            "performance": 100,
+            "accessibility": 100,
+            "best-practices": 100,
+            "seo": 92
+          },
+          "numbers": {
+            "lcp": 589.3388,
+            "cls": 0,
+            "tbt": 0
+          },
+          "fetchTime": "2026-10-17T16:04:01.951Z"
+        },
+        {
+          "scores": {
+            "performance": 100,
+            "accessibility": 100,
+            "best-practices": 100,
+            "seo": 92
+          },
+          "numbers": {
+            "lcp": 591.8438,
+            "cls": 0,
+            "tbt": 0
+          },
+          "fetchTime": "2026-10-17T16:04:12.359Z"
+        },
+        {
+          "scores": {
+            "performance": 100,
+            "accessibility": 100,
+            "best-practices": 100,
+            "seo": 92
+          },
+          "numbers": {
+            "lcp": 590.446,
+            "cls": 0,
+            "tbt": 0
+          },
+          "fetchTime": "2026-10-17T16:04:22.786Z"
+        }
+      ],
+      "median": {
+        "performance": 100,
+        "accessibility": 100,
+        "best-practices": 100,
+        "seo": 92,
+        "lcp": 590.446,
+        "cls": 0,
+        "tbt": 0
+      },
+      "below": [],
+      "opportunities": [
+        {
+          "id": "unused-javascript",
+          "title": "Reduce unused JavaScript",
+          "numericValue": 40
+        },
+        {
+          "id": "server-response-time",
+          "title": "Initial server response time was short",
+          "numericValue": 1
+        }
+      ]
+    },
+    {
+      "name": "detalhe-mobile",
+      "path": "/nfts/nft-aurora",
+      "preset": "mobile",
+      "runs": [
+        {
+          "scores": {
+            "performance": 92,
+            "accessibility": 100,
+            "best-practices": 100,
+            "seo": 92
+          },
+          "numbers": {
+            "lcp": 2632.7260000000006,
+            "cls": 0.08723973135654903,
+            "tbt": 9
+          },
+          "fetchTime": "2026-10-17T16:04:33.142Z"
+        },
+        {
+          "scores": {
+            "performance": 93,
+            "accessibility": 100,
+            "best-practices": 100,
+            "seo": 92
+          },
+          "numbers": {
+            "lcp": 2635.1452,
+            "cls": 0.08723973135654903,
+            "tbt": 14
+          },
+          "fetchTime": "2026-10-17T16:04:43.691Z"
+        },
+        {
+          "scores": {
+            "performance": 92,
+            "accessibility": 100,
+            "best-practices": 100,
+            "seo": 92
+          },
+          "numbers": {
+            "lcp": 2645.3809999999994,
+            "cls": 0.08723973135654903,
+            "tbt": 20
+          },
+          "fetchTime": "2026-10-17T16:04:54.218Z"
+        }
+      ],
+      "median": {
+        "performance": 92,
+        "accessibility": 100,
+        "best-practices": 100,
+        "seo": 92,
+        "lcp": 2635.1452,
+        "cls": 0.08723973135654903,
+        "tbt": 14
+      },
+      "below": [],
+      "opportunities": [
+        {
+          "id": "unused-javascript",
+          "title": "Reduce unused JavaScript",
+          "numericValue": 450
+        },
+        {
+          "id": "server-response-time",
+          "title": "Initial server response time was short",
+          "numericValue": 1
+        }
+      ]
+    },
+    {
+      "name": "detalhe-desktop",
+      "path": "/nfts/nft-aurora",
+      "preset": "desktop",
+      "runs": [
+        {
+          "scores": {
+            "performance": 100,
+            "accessibility": 100,
+            "best-practices": 100,
+            "seo": 92
+          },
+          "numbers": {
+            "lcp": 597.564,
+            "cls": 0,
+            "tbt": 0
+          },
+          "fetchTime": "2026-10-17T16:05:04.847Z"
+        },
+        {
+          "scores": {
+            "performance": 100,
+            "accessibility": 100,
+            "best-practices": 100,
+            "seo": 92
+          },
+          "numbers": {
+            "lcp": 599.6016,
+            "cls": 0,
+            "tbt": 0
+          },
+          "fetchTime": "2026-10-17T16:05:15.405Z"
+        },
+        {
+          "scores": {
+            "performance": 100,
+            "accessibility": 100,
+            "best-practices": 100,
+            "seo": 92
+          },
+          "numbers": {
+            "lcp": 599.2154,
+            "cls": 0,
+            "tbt": 0
+          },
+          "fetchTime": "2026-10-17T16:05:26.129Z"
+        }
+      ],
+      "median": {
+        "performance": 100,
+        "accessibility": 100,
+        "best-practices": 100,
+        "seo": 92,
+        "lcp": 599.2154,
+        "cls": 0,
+        "tbt": 0
+      },
+      "below": [],
+      "opportunities": [
+        {
+          "id": "unused-javascript",
+          "title": "Reduce unused JavaScript",
+          "numericValue": 40
+        },
+        {
+          "id": "server-response-time",
+          "title": "Initial server response time was short",
+          "numericValue": 1
+        }
+      ]
+    }
+  ]
+}
