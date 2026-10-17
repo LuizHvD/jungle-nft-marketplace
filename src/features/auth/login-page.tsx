@@ -43,7 +43,7 @@ export function LoginPage() {
   const rootError = form.formState.errors.root?.message
 
   return (
-    <AuthScreen title="Login" returnTo={returnTo}>
+    <AuthScreen title="Entrar" returnTo={returnTo}>
       <form
         id="login-form"
         aria-label="Form"

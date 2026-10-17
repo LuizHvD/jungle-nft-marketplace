@@ -62,7 +62,7 @@ function ShellFrame({ children }: AppShellProps) {
   const { filtersOpen } = useCatalogChrome()
 
   return (
-    <div className="flex min-h-dvh flex-col pb-28 md:pb-0">
+    <div className="flex min-h-dvh flex-col pb-36 md:pb-0">
       <SessionSocketBinding />
       <SiteHeader />
       <MobileAccount />

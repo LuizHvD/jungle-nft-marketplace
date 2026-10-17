@@ -44,7 +44,7 @@ export function RegisterPage() {
   const rootError = form.formState.errors.root?.message
 
   return (
-    <AuthScreen title="Cadastro" returnTo={returnTo}>
+    <AuthScreen title="Criar perfil" returnTo={returnTo}>
       <form
         id="register-form"
         aria-label="Form"

@@ -18,7 +18,7 @@ export function AuthScreen({ title, returnTo, children }: AuthScreenProps) {
   const [desktop, setDesktop] = useState(false)
 
   useLayoutEffect(() => {
-    const media = window.matchMedia('(min-width: 1440px)')
+    const media = window.matchMedia('(min-width: 768px)')
     const apply = () => setDesktop(media.matches)
     apply()
     media.addEventListener('change', apply)

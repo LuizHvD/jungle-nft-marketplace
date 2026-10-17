@@ -98,7 +98,7 @@ export function NftDetailPage({ nftId }: NftDetailPageProps) {
         : ''
 
   return (
-    <main className="flex min-w-0 flex-col gap-8 py-6 pb-28 md:pb-10">
+    <main className="flex min-w-0 flex-col gap-8 py-6 pb-40 md:pb-10">
       <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
         <NftPicture
           nftId={nft.id}
@@ -146,7 +146,7 @@ export function NftDetailPage({ nftId }: NftDetailPageProps) {
             />
           </div>
           <CommerceStatus message={status} />
-          <div className="fixed inset-x-0 bottom-[108px] z-30 flex items-center gap-3 bg-background/95 px-6 py-3 md:static md:bg-transparent md:px-0">
+          <div className="fixed inset-x-0 bottom-36 z-30 flex items-center gap-3 bg-background/95 px-6 py-3 md:static md:bg-transparent md:px-0">
             <button
               type="button"
               disabled={
