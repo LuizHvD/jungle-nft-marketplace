@@ -47,7 +47,7 @@ export function SiteHeader() {
           >
             Search Icon
           </Button>
-          <Button>Cart</Button>
+          <Link to="/carrinho">Cart</Link>
           <HeaderAccount />
         </div>
       </div>

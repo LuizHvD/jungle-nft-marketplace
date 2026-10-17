@@ -6,6 +6,8 @@ import { credentialsSchema, sessionSchema } from '@/contracts/auth.ts'
 import { applyFieldErrors, focusFirstInvalid, zodResolver } from '@/lib/forms/zod-resolver.ts'
 import { http } from '@/lib/http/client.ts'
 import { apiErrorMessage } from '@/lib/http/error.ts'
+import { markMergeFailed } from '@/lib/commerce/checkout-draft.ts'
+import { mergeGuestCart } from '@/lib/commerce/merge-guest-cart.ts'
 import { safeReturnTo } from '@/lib/session/return-to.ts'
 import { adoptSession } from '@/lib/session/session.ts'
 
@@ -43,6 +45,10 @@ export function LoginPage() {
         onSubmit={form.handleSubmit(async (values) => {
           try {
             const session = await login.mutateAsync(values)
+            const merged = await mergeGuestCart(session.token)
+            if (merged === 'failed') {
+              markMergeFailed()
+            }
             adoptSession(queryClient, session)
             await navigate({ href: safeReturnTo(returnTo) })
           } catch (error) {
